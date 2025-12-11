@@ -1,0 +1,10 @@
+ROWS 6
+COLS 7
+TURN O
+BOARD
+. . . . . . . 
+. . . . . . . 
+. . . . . . . 
+. . . X . . . 
+. O X X . . . 
+O O X O . . . 
