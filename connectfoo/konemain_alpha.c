@@ -9,6 +9,7 @@
 #define MAX_COLS 10
 
 int ROWS, COLS;
+int ren;
 char board[MAX_ROWS][MAX_COLS];  // '.' 空, 'O' Player1, 'X' Player2
 
 //----------------------------------------------
@@ -146,7 +147,7 @@ int dropPiece(int col, char player) {
     return 0;  // 置けない
 }
 
-//----------------------------------------------
+/*//----------------------------------------------
 // 4連判定
 //----------------------------------------------
 char checkWin() {
@@ -174,6 +175,45 @@ char checkWin() {
             if (r + 3 < ROWS && c - 3 >= 0 && p == board[r + 1][c - 1] &&
                 p == board[r + 2][c - 2] && p == board[r + 3][c - 3])
                 return p;
+        }
+    }
+    return 0;
+}*/
+
+//----------------------------------------------
+// N連判定
+//----------------------------------------------
+char checkWin(int N) {
+    if (N < 1) return 0;
+
+    // 方向ベクトル：横、縦、右下、左下
+    const int dr[4] = {0, 1, 1, 1};
+    const int dc[4] = {1, 0, 1, -1};
+
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            char p = board[r][c];
+            if (p == '.') continue;
+
+            // 4方向をチェック
+            for (int dir = 0; dir < 4; dir++) {
+                int count = 1;
+
+                for (int k = 1; k < N; k++) {
+                    int nr = r + dr[dir] * k;
+                    int nc = c + dc[dir] * k;
+
+                    // 範囲外チェック
+                    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) break;
+
+                    if (board[nr][nc] == p)
+                        count++;
+                    else
+                        break;
+                }
+
+                if (count == N) return p;
+            }
         }
     }
     return 0;
@@ -264,6 +304,15 @@ int main() {
             printf("無効な入力です。はじめからやり直してください。\n");
             return 0;
         }
+        while (1) {
+            printf("1以上の揃える数を入力してください:\n>");
+            scanf("%d", &ren);
+            if (ren <= 0) {
+                printf("無効な入力です。はじめからやり直してください。\n");
+                return 0;
+            }
+            break;
+        }
 
         /* consume leftover newline (or other chars) from scanf so the next
            fgets() does not read an empty line immediately */
@@ -326,7 +375,8 @@ int main() {
             savedTurn = 'O';
         saveGame(savedTurn, path, tm);
 
-        char winner = checkWin();
+        char winner = checkWin(ren);
+
         if (winner) {
             displayBoard();
             printf("Player %c の勝利です！\n", winner);
