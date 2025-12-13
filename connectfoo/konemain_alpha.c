@@ -67,17 +67,16 @@ void saveGame(char turn, const char* path, struct tm* tm) {
         return;
     }
 
-    fprintf(fp, "ROWS %d\n", ROWS);
-    fprintf(fp, "COLS %d\n", COLS);
-    fprintf(fp, "TURN %c\n", turn);
-    fprintf(fp, "REN %d\n", ren);
-    fprintf(fp, "BOARD\n");
+    fprintf(fp, "ROWS %d,", ROWS);
+    fprintf(fp, "COLS %d,", COLS);
+    fprintf(fp, "TURN %c,", turn);
+    fprintf(fp, "REN %d,", ren);
+    fprintf(fp, "BOARD ,");
 
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
             fprintf(fp, "%c ", board[r][c]);
         }
-        fprintf(fp, "\n");
     }
 
     fclose(fp);
@@ -96,15 +95,15 @@ int loadGame(const char* filename, char* turn) {
 
     char label[16];
 
-    fscanf(fp, "%s %d", label, &ROWS);  // ROWS
-    fscanf(fp, "%s %d", label, &COLS);  // COLS
-    fscanf(fp, "%s %c", label, turn);   // TURN
-    fscanf(fp, "%s %d", label, &ren);   // REN
-    fscanf(fp, "%s", label);            // BOARD
+    fscanf(fp, "%s %d,", label, &ROWS);  // ROWS
+    fscanf(fp, "%s %d,", label, &COLS);  // COLS
+    fscanf(fp, "%s %c,", label, turn);   // TURN
+    fscanf(fp, "%s %d,", label, &ren);   // REN
+    fscanf(fp, "%s ,", label);           // BOARD
 
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            fscanf(fp, " %c", &board[r][c]);
+            fscanf(fp, "%c ", &board[r][c]);
         }
     }
 
@@ -278,6 +277,11 @@ int main() {
             menu = 1;  // 新規ゲームに切り替え
         } else {
             printf("ロード完了\n");
+            /* consume leftover newline from scanf */
+            {
+                int _ch;
+                while ((_ch = getchar()) != '\n' && _ch != EOF);
+            }
         }
     }
 
@@ -346,14 +350,14 @@ int main() {
         if (len > 0 && input[len - 1] == '\n') input[len - 1] = '\0';
 
         if (input[0] == '\0') {
-            printf("数字を入力してください。\n");
+            printf("INVALUE:数字を入力してください。\n");
             continue;
         }
 
         char* endptr = NULL;
         long val = strtol(input, &endptr, 10);
         if (endptr == input || *endptr != '\0') {
-            printf("数字を入力してください。\n");
+            printf("NULLPOINTER:数字を入力してください。\n");
             continue;
         }
 
