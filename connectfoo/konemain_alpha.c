@@ -70,6 +70,7 @@ void saveGame(char turn, const char* path, struct tm* tm) {
     fprintf(fp, "ROWS %d\n", ROWS);
     fprintf(fp, "COLS %d\n", COLS);
     fprintf(fp, "TURN %c\n", turn);
+    fprintf(fp, "REN %d\n", ren);
     fprintf(fp, "BOARD\n");
 
     for (int r = 0; r < ROWS; r++) {
@@ -98,6 +99,7 @@ int loadGame(const char* filename, char* turn) {
     fscanf(fp, "%s %d", label, &ROWS);  // ROWS
     fscanf(fp, "%s %d", label, &COLS);  // COLS
     fscanf(fp, "%s %c", label, turn);   // TURN
+    fscanf(fp, "%s %d", label, &ren);   // REN
     fscanf(fp, "%s", label);            // BOARD
 
     for (int r = 0; r < ROWS; r++) {
