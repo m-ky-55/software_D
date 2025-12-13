@@ -5,8 +5,8 @@
 #include <sys/stat.h>
 #include <time.h>
 
-#define MAX_ROWS 10
-#define MAX_COLS 10
+#define MAX_ROWS 99  // 縦
+#define MAX_COLS 35  // 横
 
 int ROWS, COLS;
 int ren;
@@ -124,10 +124,18 @@ void initBoard() {
 //----------------------------------------------
 void displayBoard() {
     printf("\n  ");
-    for (int c = 0; c < COLS; c++) printf("%d ", c);
+    for (int c = 0; c < COLS; c++) {
+        if (c + 1 <= 10)
+            printf(" %d", c + 1);
+        else
+            printf("%d", c + 1);
+    }
     printf("\n");
     for (int r = 0; r < ROWS; r++) {
-        printf("%d ", r);
+        if (r + 1 < 10)
+            printf(" %d ", r + 1);
+        else
+            printf("%d ", r + 1);
         for (int c = 0; c < COLS; c++) {
             printf("%c ", board[r][c]);
         }
@@ -140,8 +148,8 @@ void displayBoard() {
 //----------------------------------------------
 int dropPiece(int col, char player) {
     for (int r = ROWS - 1; r >= 0; r--) {
-        if (board[r][col] == '.') {
-            board[r][col] = player;
+        if (board[r][col - 1] == '.') {
+            board[r][col - 1] = player;
             return 1;
         }
     }
@@ -286,7 +294,7 @@ int main() {
     }
 
     if (menu == 1 || menu != 2) {
-        printf("盤面サイズを選択してください:\n");
+        /*printf("盤面サイズを選択してください:\n");
         printf("1: 7x6\n2: 10x8\n3: 6x4\n> ");
 
         int choice;
@@ -309,7 +317,22 @@ int main() {
             }
             printf("無効な入力です。はじめからやり直してください。\n");
             return 0;
+        }*/
+
+        while (1) {
+            printf("盤面の横サイズ (1～%d) を入力してください: ", MAX_COLS);
+            scanf("%d", &COLS);
+
+            printf("盤面の縦サイズ (1～%d) を入力してください: ", MAX_ROWS);
+            scanf("%d", &ROWS);
+
+            if (COLS < 1 || COLS > MAX_COLS || ROWS < 1 || ROWS > MAX_ROWS) {
+                printf("範囲外です。はじめからやり直してください。\n");
+                return 0;
+            }
+            break;
         }
+
         while (1) {
             printf("1以上の揃える数を入力してください:\n>");
             scanf("%d", &ren);
@@ -362,7 +385,7 @@ int main() {
         }
 
         col = (int)val;
-        if (val < 0 || col >= COLS) {
+        if (val < 0 || col > COLS) {
             printf("範囲外です。\n");
             continue;
         }
