@@ -1,12 +1,4 @@
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <time.h>
-
-#define MAX_ROWS 99  // 縦
-#define MAX_COLS 35  // 横
+#include "konemain_alpha.h"
 
 int ROWS, COLS;
 int ren;

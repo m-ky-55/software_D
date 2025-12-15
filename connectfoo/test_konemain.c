@@ -5,3 +5,9 @@
 
 とりあえずまずは、testCommon.hをインクルードして、プログラムを過去のデータを元に仮で書いてみる。
 */
+#include "konemain_alpha.h"
+#include "testCommon.h"
+
+void something() {}
+
+int main() {}
