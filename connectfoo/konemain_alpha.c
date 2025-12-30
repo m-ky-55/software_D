@@ -144,39 +144,6 @@ int dropPiece(int yoko, char player) {
     return 0;  // 置けない
 }
 
-/*//----------------------------------------------
-// 4連判定
-//----------------------------------------------
-char checkWin() {
-    for (int r = 0; r < TATE; r++) {
-        for (int c = 0; c < YOKO; c++) {
-            char p = board[r][c];
-            if (p == '.') continue;
-
-            // 横
-            if (c + 3 < YOKO && p == board[r][c + 1] && p == board[r][c + 2] &&
-                p == board[r][c + 3])
-                return p;
-
-            // 縦
-            if (r + 3 < TATE && p == board[r + 1][c] && p == board[r + 2][c] &&
-                p == board[r + 3][c])
-                return p;
-
-            // 右下
-            if (r + 3 < TATE && c + 3 < YOKO && p == board[r + 1][c + 1] &&
-                p == board[r + 2][c + 2] && p == board[r + 3][c + 3])
-                return p;
-
-            // 左下
-            if (r + 3 < TATE && c - 3 >= 0 && p == board[r + 1][c - 1] &&
-                p == board[r + 2][c - 2] && p == board[r + 3][c - 3])
-                return p;
-        }
-    }
-    return 0;
-}*/
-
 //----------------------------------------------
 // N連判定
 //----------------------------------------------
