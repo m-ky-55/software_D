@@ -1,12 +1,9 @@
 #ifndef __TEST_COMMON_H
 #define __TEST_COMMON_H
 
-// 複素数構造体を使う時には次の行を活かす
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
-
-// #include "complex.h"
 
 #define message(m) fprintf(stderr, (m))
 #define message1(m, a) fprintf(stderr, (m), (a))

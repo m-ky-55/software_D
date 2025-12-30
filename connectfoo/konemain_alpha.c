@@ -1,9 +1,5 @@
 #include "konemain_alpha.h"
 
-int ROWS, COLS;
-int ren;
-char board[MAX_ROWS][MAX_COLS];  // '.' 空, 'O' Player1, 'X' Player2
-
 //----------------------------------------------
 // savesフォルダ作成
 //----------------------------------------------
@@ -59,14 +55,14 @@ void saveGame(char turn, const char* path, struct tm* tm) {
         return;
     }
 
-    fprintf(fp, "ROWS %d,", ROWS);
-    fprintf(fp, "COLS %d,", COLS);
+    fprintf(fp, "TATE %d,", TATE);
+    fprintf(fp, "YOKO %d,", YOKO);
     fprintf(fp, "TURN %c,", turn);
     fprintf(fp, "REN %d,", ren);
     fprintf(fp, "BOARD ,");
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < TATE; r++) {
+        for (int c = 0; c < YOKO; c++) {
             fprintf(fp, "%c ", board[r][c]);
         }
     }
@@ -87,14 +83,14 @@ int loadGame(const char* filename, char* turn) {
 
     char label[16];
 
-    fscanf(fp, "%s %d,", label, &ROWS);  // ROWS
-    fscanf(fp, "%s %d,", label, &COLS);  // COLS
+    fscanf(fp, "%s %d,", label, &TATE);  // TATE
+    fscanf(fp, "%s %d,", label, &YOKO);  // YOKO
     fscanf(fp, "%s %c,", label, turn);   // TURN
     fscanf(fp, "%s %d,", label, &ren);   // REN
     fscanf(fp, "%s ,", label);           // BOARD
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < TATE; r++) {
+        for (int c = 0; c < YOKO; c++) {
             fscanf(fp, "%c ", &board[r][c]);
         }
     }
@@ -107,8 +103,8 @@ int loadGame(const char* filename, char* turn) {
 // 盤面初期化
 //----------------------------------------------
 void initBoard() {
-    for (int r = 0; r < ROWS; r++)
-        for (int c = 0; c < COLS; c++) board[r][c] = '.';
+    for (int r = 0; r < TATE; r++)
+        for (int c = 0; c < YOKO; c++) board[r][c] = '.';
 }
 
 //----------------------------------------------
@@ -116,19 +112,19 @@ void initBoard() {
 //----------------------------------------------
 void displayBoard() {
     printf("\n  ");
-    for (int c = 0; c < COLS; c++) {
+    for (int c = 0; c < YOKO; c++) {
         if (c + 1 <= 10)
             printf(" %d", c + 1);
         else
             printf("%d", c + 1);
     }
     printf("\n");
-    for (int r = 0; r < ROWS; r++) {
+    for (int r = 0; r < TATE; r++) {
         if (r + 1 < 10)
             printf(" %d ", r + 1);
         else
             printf("%d ", r + 1);
-        for (int c = 0; c < COLS; c++) {
+        for (int c = 0; c < YOKO; c++) {
             printf("%c ", board[r][c]);
         }
         printf("\n");
@@ -138,10 +134,10 @@ void displayBoard() {
 //----------------------------------------------
 // 指定列にコマを落とす
 //----------------------------------------------
-int dropPiece(int col, char player) {
-    for (int r = ROWS - 1; r >= 0; r--) {
-        if (board[r][col - 1] == '.') {
-            board[r][col - 1] = player;
+int dropPiece(int yoko, char player) {
+    for (int r = TATE - 1; r >= 0; r--) {
+        if (board[r][yoko - 1] == '.') {
+            board[r][yoko - 1] = player;
             return 1;
         }
     }
@@ -152,28 +148,28 @@ int dropPiece(int col, char player) {
 // 4連判定
 //----------------------------------------------
 char checkWin() {
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < TATE; r++) {
+        for (int c = 0; c < YOKO; c++) {
             char p = board[r][c];
             if (p == '.') continue;
 
             // 横
-            if (c + 3 < COLS && p == board[r][c + 1] && p == board[r][c + 2] &&
+            if (c + 3 < YOKO && p == board[r][c + 1] && p == board[r][c + 2] &&
                 p == board[r][c + 3])
                 return p;
 
             // 縦
-            if (r + 3 < ROWS && p == board[r + 1][c] && p == board[r + 2][c] &&
+            if (r + 3 < TATE && p == board[r + 1][c] && p == board[r + 2][c] &&
                 p == board[r + 3][c])
                 return p;
 
             // 右下
-            if (r + 3 < ROWS && c + 3 < COLS && p == board[r + 1][c + 1] &&
+            if (r + 3 < TATE && c + 3 < YOKO && p == board[r + 1][c + 1] &&
                 p == board[r + 2][c + 2] && p == board[r + 3][c + 3])
                 return p;
 
             // 左下
-            if (r + 3 < ROWS && c - 3 >= 0 && p == board[r + 1][c - 1] &&
+            if (r + 3 < TATE && c - 3 >= 0 && p == board[r + 1][c - 1] &&
                 p == board[r + 2][c - 2] && p == board[r + 3][c - 3])
                 return p;
         }
@@ -191,8 +187,8 @@ char checkWin(int N) {
     const int dr[4] = {0, 1, 1, 1};
     const int dc[4] = {1, 0, 1, -1};
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
+    for (int r = 0; r < TATE; r++) {
+        for (int c = 0; c < YOKO; c++) {
             char p = board[r][c];
             if (p == '.') continue;
 
@@ -205,7 +201,7 @@ char checkWin(int N) {
                     int nc = c + dc[dir] * k;
 
                     // 範囲外チェック
-                    if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) break;
+                    if (nr < 0 || nr >= TATE || nc < 0 || nc >= YOKO) break;
 
                     if (board[nr][nc] == p)
                         count++;
@@ -224,8 +220,8 @@ char checkWin(int N) {
 // 盤面がすべて埋まったか
 //----------------------------------------------
 int isFull() {
-    for (int r = 0; r < ROWS; r++)
-        for (int c = 0; c < COLS; c++)
+    for (int r = 0; r < TATE; r++)
+        for (int c = 0; c < YOKO; c++)
             if (board[r][c] == '.') return 0;
     return 1;
 }
@@ -293,18 +289,18 @@ int main() {
         while (1) {
             scanf("%d", &choice);
             if (choice == 1) {
-                COLS = 7;
-                ROWS = 6;
+                YOKO = 7;
+                TATE = 6;
                 break;
             }
             if (choice == 2) {
-                COLS = 10;
-                ROWS = 8;
+                YOKO = 10;
+                TATE = 8;
                 break;
             }
             if (choice == 3) {
-                COLS = 6;
-                ROWS = 4;
+                YOKO = 6;
+                TATE = 4;
                 break;
             }
             printf("無効な入力です。はじめからやり直してください。\n");
@@ -312,13 +308,13 @@ int main() {
         }*/
 
         while (1) {
-            printf("盤面の横サイズ (1～%d) を入力してください: ", MAX_COLS);
-            scanf("%d", &COLS);
+            printf("盤面の横サイズ (1～%d) を入力してください: ", MAX_YOKO);
+            scanf("%d", &YOKO);
 
-            printf("盤面の縦サイズ (1～%d) を入力してください: ", MAX_ROWS);
-            scanf("%d", &ROWS);
+            printf("盤面の縦サイズ (1～%d) を入力してください: ", MAX_TATE);
+            scanf("%d", &TATE);
 
-            if (COLS < 1 || COLS > MAX_COLS || ROWS < 1 || ROWS > MAX_ROWS) {
+            if (YOKO < 1 || YOKO > MAX_YOKO || TATE < 1 || TATE > MAX_TATE) {
                 printf("範囲外です。はじめからやり直してください。\n");
                 return 0;
             }
@@ -346,7 +342,7 @@ int main() {
         turn = 'O';
     }
 
-    int col;
+    int yoko;
 
     while (1) {
         displayBoard();
@@ -376,13 +372,13 @@ int main() {
             continue;
         }
 
-        col = (int)val;
-        if (val < 0 || col > COLS) {
+        yoko = (int)val;
+        if (val < 0 || yoko > YOKO) {
             printf("範囲外です。\n");
             continue;
         }
 
-        if (!dropPiece(col, turn)) {
+        if (!dropPiece(yoko, turn)) {
             printf("その列には置けません。\n");
             continue;
         }
