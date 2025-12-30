@@ -1,3 +1,6 @@
+#ifndef KONEMAIN_BETA_H
+#define KONEMAIN_BETA_H
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,9 +11,9 @@
 #define MAX_TATE 99  // 縦
 #define MAX_YOKO 35  // 横
 
-int TATE, YOKO;
-int ren;
-char board[MAX_TATE][MAX_YOKO];  // '.' 空, 'O' Player1, 'X' Player2
+extern int TATE, YOKO;
+extern int ren;
+extern char board[MAX_TATE][MAX_YOKO];  // '.' 空, 'O' Player1, 'X' Player2
 
 void createSaveFolder();
 void createSaveGameFolder(const char* path);
@@ -22,3 +25,5 @@ void displayBoard();
 int dropPiece(int yoko, char player);
 char checkWin(int ren);
 int isFull();
+
+#endif  // KONEMAIN_BETA_H

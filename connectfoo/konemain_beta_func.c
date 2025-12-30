@@ -1,4 +1,8 @@
-#include "konemain_alpha.h"
+#include "konemain_beta.h"
+
+int TATE, YOKO;
+int ren;
+char board[MAX_TATE][MAX_YOKO];  // '.' 空, 'O' Player1, 'X' Player2
 
 //----------------------------------------------
 // savesフォルダ作成

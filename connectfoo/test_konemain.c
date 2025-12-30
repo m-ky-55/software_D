@@ -11,29 +11,29 @@
 
 void test_initBoard() {
     testStart("initBoard()");
-    for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
-        for (int tate = 0; tate < MAX_TATE; tate++) {
+    for (int y = 0; y < MAX_YOKO; y++) {
+        for (int t = 0; t < MAX_TATE; t++) {
             // initBoard();
             // assertEqualsInt(board[tate][yoko], '.');
-            assertEqualsInt(tate * yoko, tate * yoko);  // 仮のコード
+            assertEqualsInt(t * y, t * y);  // 仮のコード
         }
     }
 }
 
 // void test_dropPiece() {
-//     for (int tate = 0; tate < MAX_TATE; tate++) {
+//     for (int t = 0; t < MAX_TATE; t++) {
 //         /* code */
 //     }
 // }
 //
 // void test_checkWin_YOKO() {
 //     for (ren = 1; ren < MAX_YOKO; ren++) {  // 0=error
-//         for (int yoko = 0; yoko < MAX_YOKO - ren; yoko++) {
-//             for (int tate = 0; tate < MAX_TATE; tate++) {
+//         for (int y = 0; y < MAX_YOKO - ren; y++) {
+//             for (int t = 0; t < MAX_TATE; t++) {
 //                 initBoard();
 //
 //                 for (int i = 0; i < ren; i++) {
-//                     board[tate][yoko + i] = 'O';
+//                     board[t][y + i] = 'O';
 //                 }
 //
 //                 assertEqualsInt('O', checkWin(ren));
@@ -44,12 +44,12 @@ void test_initBoard() {
 //
 // void test_checkWin_TATE() {
 //     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
-//         for (int tate = 0; tate < MAX_TATE - ren; tate++) {
-//             for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
+//         for (int t = 0; t < MAX_TATE - ren; t++) {
+//             for (int y = 0; y < MAX_YOKO; y++) {
 //                 initBoard();
 //
 //                 for (int i = 0; i < ren; i++) {
-//                     board[tate + i][yoko] = 'O';
+//                     board[t + i][y] = 'O';
 //                 }
 //
 //                 assertEqualsInt('O', checkWin(ren));
@@ -60,12 +60,12 @@ void test_initBoard() {
 //
 // void test_checkWin_migiue_to_hidarisita() {
 //     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
-//         for (int tate = 0; tate + ren <= MAX_TATE; tate++) {
-//             for (int yoko = ren - 1; yoko < MAX_YOKO - ren; yoko++) {
+//         for (int t = 0; t + ren <= MAX_TATE; t++) {
+//             for (int y = ren - 1; y < MAX_YOKO - ren; y++) {
 //                 initBoard();
 //
 //                 for (int i = 0; i < ren; i++) {
-//                     board[tate + i][yoko - i] = 'O';
+//                     board[t + i][y - i] = 'O';
 //                 }
 //
 //                 assertEqualsInt('O', checkWin(ren));
@@ -76,12 +76,12 @@ void test_initBoard() {
 //
 // void test_checkWin_hidariue_to_migisita() {
 //     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
-//         for (int tate = 0; tate + ren <= MAX_TATE; tate++) {
-//             for (int yoko = 0; yoko + ren <= MAX_YOKO; yoko++) {
+//         for (int t = 0; t + ren <= MAX_TATE; t++) {
+//             for (int y = 0; y + ren <= MAX_YOKO; y++) {
 //                 initBoard();
 //
 //                 for (int i = 0; i < ren; i++) {
-//                     board[tate + i][yoko + i] = 'O';
+//                     board[t + i][y + i] = 'O';
 //                 }
 //
 //                 assertEqualsInt('O', checkWin(ren));
@@ -98,8 +98,8 @@ void test_initBoard() {
 // }
 //
 // void test_isFull() {
-//     for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
-//         for (int tate = 0; tate < MAX_TATE; tate++) {
+//     for (int y = 0; y < MAX_YOKO; y++) {
+//         for (int t = 0; t < MAX_TATE; t++) {
 //             /* code */
 //         }
 //     }
