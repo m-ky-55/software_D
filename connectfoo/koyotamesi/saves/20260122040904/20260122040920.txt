@@ -1,0 +1,1 @@
+TATE 5,YOKO 5,TURN X,REN 3,BOARD ,. . . . . . . . . . . . . . . . . . . . O X O . . 
