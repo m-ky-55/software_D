@@ -372,4 +372,5 @@ int main() {
     return 0;
 }
 
-// 実行：gcc connect4_ncurses.c -lncurses -o connect4./connect4
+// 実行：gcc connect4_ncurses.c -lncurses -o connect4
+// ./connect4
