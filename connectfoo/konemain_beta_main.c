@@ -1,4 +1,4 @@
-#include "konemain_alpha.h"
+#include "konemain_beta.h"
 
 //----------------------------------------------
 // メイン

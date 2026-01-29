@@ -6,11 +6,15 @@
 とりあえずまずは、testCommon.hをインクルードして、プログラムを過去のデータを元に仮で書いてみる。
 */
 
+/*ちょっと考えた。
+全部の値で試すのではなく、絶対に大丈夫な値、絶対にダメな値、境界値の前後を試してしまえばよくないですか、と。
+*/
+
 #include "konemain_beta.h"
 #include "testCommon.h"
 
 void test_initBoard() {
-    testStart("initBoard()");
+    testStart("initBoard()\n");
     TATE = MAX_TATE;
     YOKO = MAX_YOKO;
     initBoard();
@@ -23,6 +27,7 @@ void test_initBoard() {
 }
 
 void test_dropPiece() {
+    printf("test_dropPiece()\n");
     for (int tate = 0; tate < MAX_TATE; tate++) {
         for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
             initBoard();
@@ -36,6 +41,7 @@ void test_dropPiece() {
     }
 }
 void test_checkWin_YOKO() {
+    printf("test_checkWin_YOKO()\n");
     for (ren = 1; ren < MAX_YOKO; ren++) {  // 0=error
         for (int yoko = 0; yoko < MAX_YOKO - ren; yoko++) {
             for (int tate = 0; tate < MAX_TATE; tate++) {
@@ -50,6 +56,7 @@ void test_checkWin_YOKO() {
     }
 }
 void test_checkWin_TATE() {
+    printf("test_checkWin_TATE()\n");
     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
         for (int tate = 0; tate < MAX_TATE - ren; tate++) {
             for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
@@ -64,6 +71,7 @@ void test_checkWin_TATE() {
     }
 }
 void test_checkWin_migiue_to_hidarisita() {
+    printf("test_checkWin_migiue_to_hidarisita()\n");
     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
         for (int tate = 0; tate + ren <= MAX_TATE; tate++) {
             for (int yoko = ren - 1; yoko < MAX_YOKO - ren; yoko++) {
@@ -79,6 +87,7 @@ void test_checkWin_migiue_to_hidarisita() {
     }
 }
 void test_checkWin_hidariue_to_migisita() {
+    printf("test_checkWin_hidariue_to_migisita()\n");
     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
         for (int tate = 0; tate + ren <= MAX_TATE; tate++) {
             for (int yoko = 0; yoko + ren <= MAX_YOKO; yoko++) {
@@ -94,6 +103,7 @@ void test_checkWin_hidariue_to_migisita() {
     }
 }
 void test_checkWin_NO() {
+    printf("test_checkWin_NO()\n");
     for (ren = 1; ren < MAX_TATE; ren++) {  // 0=error
         initBoard();
         for (int i = 0; i < ren; i++) {
@@ -104,6 +114,7 @@ void test_checkWin_NO() {
     }
 }
 void test_isFull() {
+    printf("test_isFull()\n");
     for (int yoko = 0; yoko < MAX_YOKO; yoko++) {
         for (int tate = 0; tate < MAX_TATE; tate++) {
             initBoard();
