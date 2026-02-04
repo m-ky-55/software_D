@@ -3,7 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/stat.h>
-#include <ncurses.h>
+#include <curses.h>
 #include <locale.h>
 #include <errno.h>
 
@@ -42,6 +42,19 @@ void makeSaveFilename(char* buf, const char* path, struct tm* tm) {
              tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
              tm->tm_hour, tm->tm_min, tm->tm_sec);
 }
+
+int isValidSavePath(const char *fname) {
+    int y, mo, d, h, mi, s;
+    char tail;
+
+    return sscanf(
+        fname,
+        "saves/%4d%2d%2d%2d%2d%2d.txt%c",
+        &y, &mo, &d, &h, &mi, &s, &tail
+    ) == 6;
+}
+
+
 
 void saveGame(char nextTurn, const char* path, struct tm* tm) {
     char filename[256];
@@ -153,13 +166,27 @@ int inputNumber(const char* msg, int min, int max) {
     while (1) {
         clear();
         mvprintw(2, 2, "%s (%d〜%d)", msg, min, max);
-        mvprintw(4, 2, "入力: ");
-        echo();
-        scanw("%d", &val);
-        noecho();
-        if (val >= min && val <= max) return val;
+        while (1) {
+            mvprintw(4, 2, "入力: ");
+            echo();
+            scanw("%d", &val);
+            noecho();
+            // if (val >= min && val <= max){
+            if (min <= val && val <= max){
+            break;   // 正しい入力 → 次へ
+            }else{
+                mvprintw(7, 2, "無効な選択です。%d〜%dを入力してください。",min, max);
+                clrtoeol();
+                refresh();
+            }
+        }
+    return val;
+    break;
     }
 }
+
+
+
 
 void drawBoard(int cursor) {
     clear();
@@ -177,16 +204,16 @@ void drawBoard(int cursor) {
 
             if (v == 'O') {
                 attron(COLOR_PAIR(1));
-                mvprintw(y, x, " O ");
+                mvprintw(y, x, " ● ");
                 attroff(COLOR_PAIR(1));
             } else if (v == 'X') {
                 attron(COLOR_PAIR(2));
-                mvprintw(y, x, " X ");
+                mvprintw(y, x, " ● ");
                 attroff(COLOR_PAIR(2));
             } else if (v == '#') {
                 mvprintw(y, x, " # ");
             } else {
-                mvprintw(y, x, " . ");
+                mvprintw(y, x, " ･ ");
             }
         }
     }
@@ -279,33 +306,48 @@ int main() {
     refresh();
 
     int menu;
+
+while (1) {
     echo();
     scanw("%d", &menu);
     noecho();
+
+    if (menu == 1 || menu == 2) {
+        break;   // 正しい入力 → 次へ
+    }else{
+        mvprintw(7, 2, "無効な選択です。1か2を入力してください。");
+        mvprintw(5, 2, "選択: ");
+        clrtoeol();
+        refresh();
+    }
+}
+
 
     char turn = 'O';
 
     if (menu == 2) {
         char fname[256];
-        clear();
-        mvprintw(2, 2, "saves/以下のファイルパスを入力:");
-        echo();
-        scanw("%255s", fname);
-        noecho();
+        while (1) {
+            clear();
+            mvprintw(2, 2, "saves/以下のファイルパスを入力:");
+            echo();
+            getnstr(fname, 255);
+            noecho();
 
-
-
-        if (!loadGame(fname, &turn)) {
-            mvprintw(4, 2, "ロード失敗 → 新規ゲーム開始");
-            getch();
-            menu = 1;
-        } else {
-            // TATE / YOKO / REN / board / turn が復元済み
+            if (!isValidSavePath(fname)) {
+                mvprintw(7, 2,
+                    "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
+                getch();
+                continue;   // ← 再入力
+            }else if (!loadGame(fname, &turn)) {
+                mvprintw(7, 2,
+                    "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
+                getch();
+                continue;
+            }
+            break; // 成功
         }
         mvprintw(1, 2, "TATE=%d YOKO=%d REN=%d TURN=%c", TATE, YOKO, REN, turn);
-        
-    }
-    
 
     int holeRate = 0;
 
@@ -331,9 +373,28 @@ int main() {
 
     while (1) {
         drawBoard(cursor);
-        mvprintw(6 + TATE, 2,
-                 "Player %c  ← → 移動 / Enter 決定", turn);
-        refresh();
+        // mvprintw(6 + TATE, 2,
+        //          "Player %c  ← → 移動 / Enter 決定", turn);
+        // refresh();
+        int infoY = 6 + TATE;
+        const char *pieceStr;
+        int pieceColor;
+
+        if (turn == 'O') {
+            pieceStr   = "●";
+            pieceColor = 1;
+        } else if(turn == 'X'){
+            pieceStr   = "●";
+            pieceColor = 2;
+        }
+
+        mvprintw(infoY, 2, "Player ");
+        attron(COLOR_PAIR(pieceColor) | A_BOLD);
+        printw("%s", pieceStr);
+        attroff(COLOR_PAIR(pieceColor) | A_BOLD);
+        printw("  ← → 移動 / Enter 決定");
+
+
 
         int ch = getch();
         if (ch == KEY_LEFT && cursor > 0) cursor--;
@@ -348,7 +409,19 @@ int main() {
             if (w || isFull()) {
                 drawBoard(cursor);
                 if (w) {
-                    mvprintw(8 + TATE, 2, "Player %c の勝利！", w);
+                    // mvprintw(8 + TATE, 2, "Player %c の勝利！", w);
+                    if (w == 'O') {
+                        pieceStr   = "●";
+                        pieceColor = 1;
+                    } else if(w == 'X'){
+                        pieceStr   = "●";
+                        pieceColor = 2;
+                    }
+                    mvprintw(infoY, 2, "Player ");
+                    attron(COLOR_PAIR(pieceColor) | A_BOLD);
+                    printw("%s", pieceStr);
+                    attroff(COLOR_PAIR(pieceColor) | A_BOLD);
+                    printw(" の勝利！");
                 } else {
                     mvprintw(8 + TATE, 2, "引き分けです");
                 }
@@ -370,6 +443,7 @@ int main() {
 
     endwin();
     return 0;
+}
 }
 
 // 実行：gcc connect4_ncurses.c -lncurses -o connect4
