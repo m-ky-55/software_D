@@ -302,25 +302,22 @@ int main() {
     clear();
     mvprintw(2, 2, "1: 新規ゲーム");
     mvprintw(3, 2, "2: ロードして再開");
-    mvprintw(5, 2, "選択: ");
-    refresh();
-
     int menu;
-
-while (1) {
-    echo();
-    scanw("%d", &menu);
-    noecho();
-
-    if (menu == 1 || menu == 2) {
-        break;   // 正しい入力 → 次へ
-    }else{
-        mvprintw(7, 2, "無効な選択です。1か2を入力してください。");
+    while (1) {
         mvprintw(5, 2, "選択: ");
-        clrtoeol();
-        refresh();
+        // refresh();
+        echo();
+        scanw("%d", &menu);
+        noecho();
+
+        if (menu == 1 || menu == 2) {
+            break;   // 正しい入力 → 次へ
+        }else{
+            mvprintw(7, 2, "無効な選択です。1か2を入力してください。");
+            clrtoeol();
+            refresh();
+        }
     }
-}
 
 
     char turn = 'O';
@@ -337,6 +334,12 @@ while (1) {
             if (!isValidSavePath(fname)) {
                 mvprintw(7, 2,
                     "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
+                    mvprintw(2, 2, "新しくゲームを開始する場合は1を入力してください。");
+                    scanw("%d", &menu);
+                    noecho();
+                    if(menu == 1){
+                        break;
+                    }
                 getch();
                 continue;   // ← 再入力
             }else if (!loadGame(fname, &turn)) {
@@ -348,6 +351,7 @@ while (1) {
             break; // 成功
         }
         mvprintw(1, 2, "TATE=%d YOKO=%d REN=%d TURN=%c", TATE, YOKO, REN, turn);
+    }
 
     int holeRate = 0;
 
@@ -444,7 +448,7 @@ while (1) {
     endwin();
     return 0;
 }
-}
+
 
 // 実行：gcc connect4_ncurses.c -lncurses -o connect4
 // ./connect4
