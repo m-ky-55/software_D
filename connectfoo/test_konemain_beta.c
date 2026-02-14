@@ -9,7 +9,7 @@
 void setupBoard(int tate, int yoko) {
     TATE = tate;
     YOKO = yoko;
-    initBoard();
+    initBoard(0);
 }
 
 /* -----------------------------
@@ -120,6 +120,57 @@ void test_isFull() {
     printf("TESTEND:isFull()\n");
 }
 
+
+
+
+/* -----------------------------
+    initBoardテスト
+----------------------------- */
+void test_initBoard() {
+    printf("TESTSTART:initBoard()\n");
+
+    TATE = 3;
+    YOKO = 3;
+    initBoard(0);
+
+    for (int r = 0; r < TATE; r++) {
+        for (int c = 0; c < YOKO; c++) {
+            assert(board[r][c] == '.');
+        }
+    }
+
+    printf("TESTEND:initBoard()\n");
+}
+
+
+
+/* -----------------------------
+    displayBoardテスト
+----------------------------- */
+void test_displayBoard() {
+    printf("TESTSTART:displayBoard()\n");
+
+    TATE = 2;
+    YOKO = 2;
+    initBoard(0);
+
+    board[0][0] = 'O';
+    board[1][1] = 'X';
+
+    displayBoard();
+
+    assert(board[0][0] == 'O');
+    assert(board[1][1] == 'X');
+
+    printf("TESTEND:displayBoard()\n");
+}
+
+
+
+
+
+
+
 /* -----------------------------
    main
 ----------------------------- */
@@ -127,6 +178,8 @@ int main() {
     test_dropPiece();
     test_checkWin();
     test_isFull();
+    test_initBoard();
+    test_displayBoard();
 
     printf("\n=== ALL TESTS PASSED ===\n");
 
