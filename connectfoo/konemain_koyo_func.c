@@ -108,16 +108,6 @@ int loadGame(const char* filename, char* turn) {
 //----------------------------------------------
 // 盤面初期化
 //----------------------------------------------
-// int initBoard(holeRate) {
-//     for (int r = 0; r < TATE; r++)
-//         for (int c = 0; c < YOKO; c++) board[r][c] = '.';
-//     // ------------------------------
-//     // initHoles((TATE * YOKO) * 50/100);  // 例：盤面の10%
-//     int holeCount = ((TATE * YOKO * holeRate) / 100);
-//     // int holeCount = (TATE * YOKO * rate) / 100;
-//     initHoles(holeCount);
-
-// }
 
 void initBoard(int holeRate) {
     for (int r = 0; r < TATE; r++)
@@ -158,17 +148,6 @@ void displayBoard() {
 //----------------------------------------------
 // 指定列にコマを落とす
 //----------------------------------------------
-// int dropPiece(int yoko, char player) {
-//     for (int r = TATE - 1; r >= 0; r--) {
-//         if (board[r][yoko - 1] == '.') {
-//             board[r][yoko - 1] = player;
-//             return 1;
-//         }
-//     }
-//     return 0;  // 置けない
-// }
-
-//  ----------------------------------------------
 int dropPiece(int yoko, char player) {
     int c = yoko - 1;
 
@@ -202,22 +181,6 @@ void initHoles(int holeCount) {
         }
     }
 }
-// void initHoles(int holeCount) {
-//     srand((unsigned int)time(NULL));
-
-//     int holeCount = TATE * YOKO * holeRate / 100;
-
-//     int placed = 0;
-//     while (placed < holeCount) {
-//         int r = rand() % TATE;
-//         int c = rand() % YOKO;
-
-//         if (board[r][c] == '.') {
-//             board[r][c] = '#';
-//             placed++;
-//         }
-//     }
-// }
 
 
 
