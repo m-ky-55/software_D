@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Connect Game Web版</title>
+<style>
+body {
+    font-family: sans-serif;
+    text-align: center;
+    background: #222;
+    color: white;
+}
+
+#board {
+    display: grid;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cell {
+    width: 40px;
+    height: 40px;
+    background: #444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.O {
+    background: red;
+}
+
+.X {
+    background: gold;
+}
+
+.hole {
+    background: black;
+}
+
+button {
+    margin: 5px;
+    padding: 8px 15px;
+    font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<h1>Connect Game</h1>
+
+<div id="menu">
+    <button onclick="newGame()">新規ゲーム</button>
+    <button onclick="loadGame()">ロード</button>
+</div>
+
+<div id="controls" style="display:none;">
+    <p id="turnInfo"></p>
+    <button onclick="saveGame()">セーブ</button>
+</div>
+
+<div id="board"></div>
+
+<script>
+let TATE, YOKO, REN;
+let board = [];
+let turn = "O";
+
+function newGame() {
+    YOKO = parseInt(prompt("横サイズ", 7));
+    TATE = parseInt(prompt("縦サイズ", 6));
+    REN = parseInt(prompt("連続数", 4));
+    let holeRate = parseInt(prompt("穴の割合(%)", 0));
+
+    board = [];
+    for (let r = 0; r < TATE; r++) {
+        board[r] = [];
+        for (let c = 0; c < YOKO; c++) {
+            board[r][c] = ".";
+        }
+    }
+
+    let holeCount = Math.floor(TATE * YOKO * holeRate / 100);
+    while (holeCount > 0) {
+        let r = Math.floor(Math.random() * TATE);
+        let c = Math.floor(Math.random() * YOKO);
+        if (board[r][c] === ".") {
+            board[r][c] = "#";
+            holeCount--;
+        }
+    }
+
+    turn = "O";
+    startGame();
+}
+
+function startGame() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("controls").style.display = "block";
+    render();
+}
+
+function render() {
+    const boardDiv = document.getElementById("board");
+    boardDiv.innerHTML = "";
+    boardDiv.style.gridTemplateColumns = `repeat(${YOKO}, 40px)`;
+
+    for (let r = 0; r < TATE; r++) {
+        for (let c = 0; c < YOKO; c++) {
+            let cell = document.createElement("div");
+            cell.classList.add("cell");
+
+            if (board[r][c] === "O") cell.classList.add("O");
+            if (board[r][c] === "X") cell.classList.add("X");
+            if (board[r][c] === "#") cell.classList.add("hole");
+
+            cell.onclick = () => dropPiece(c);
+            boardDiv.appendChild(cell);
+        }
+    }
+
+    document.getElementById("turnInfo").innerText =
+        "Player " + turn;
+}
+
+function dropPiece(col) {
+    for (let r = TATE - 1; r >= 0; r--) {
+        if (board[r][col] === "#") continue;
+        if (board[r][col] === ".") {
+            board[r][col] = turn;
+            break;
+        }
+    }
+
+    if (checkWin(turn)) {
+        render();
+        alert("Player " + turn + " の勝利！");
+        return;
+    }
+
+    if (isFull()) {
+        render();
+        alert("引き分け！");
+        return;
+    }
+
+    turn = (turn === "O") ? "X" : "O";
+    render();
+}
+
+function checkWin(player) {
+    const dr = [0,1,1,1];
+    const dc = [1,0,1,-1];
+
+    for (let r = 0; r < TATE; r++) {
+        for (let c = 0; c < YOKO; c++) {
+            if (board[r][c] !== player) continue;
+
+            for (let d = 0; d < 4; d++) {
+                let count = 1;
+                for (let k = 1; k < REN; k++) {
+                    let nr = r + dr[d]*k;
+                    let nc = c + dc[d]*k;
+                    if (nr<0||nr>=TATE||nc<0||nc>=YOKO) break;
+                    if (board[nr][nc] === player) count++;
+                    else break;
+                }
+                if (count === REN) return true;
+            }
+        }
+    }
+    return false;
+}
+
+function isFull() {
+    for (let r = 0; r < TATE; r++)
+        for (let c = 0; c < YOKO; c++)
+            if (board[r][c] === ".") return false;
+    return true;
+}
+
+function saveGame() {
+    localStorage.setItem("connectSave", JSON.stringify({
+        TATE, YOKO, REN, board, turn
+    }));
+    alert("保存しました");
+}
+
+function loadGame() {
+    let data = JSON.parse(localStorage.getItem("connectSave"));
+    if (!data) {
+        alert("セーブデータがありません");
+        return;
+    }
+    TATE = data.TATE;
+    YOKO = data.YOKO;
+    REN = data.REN;
+    board = data.board;
+    turn = data.turn;
+    startGame();
+}
+</script>
+
+</body>
+</html>

@@ -6,6 +6,7 @@
 int main() {
     time_t t = time(NULL);
     struct tm* tm = localtime(&t);
+    char c;
 
     char path[256];
     snprintf(path, sizeof(path), "saves/%04d%02d%02d%02d%02d%02d",
@@ -23,7 +24,7 @@ int main() {
         printf("無効な入力です。はじめからやり直してください。\n");
         return 0;
     }
-
+    
     char turn = 'O';
 
     if (menu == 2) {
@@ -33,13 +34,17 @@ int main() {
             "saves以下の相対パスを入力してください。（例：20251332259900/"
             "20251332259905.txt）\n> ");
         if (scanf("%255s", input) != 1) input[0] = '\0';
-
+        /* 既に "/connectfoo" が付いていれば削除 */
+        char *p = input;
+        if (strncmp(p, "connectfoo/", 11) == 0) {
+            p += 11;
+        }
         /* 既に "saves/" が付いていればそのまま、なければ付けて fname に格納 */
-        if (strncmp(input, "saves/", 6) == 0) {
-            strncpy(fname, input, sizeof(fname));
+        if (strncmp(p, "saves/", 6) == 0) {
+            strncpy(fname, p, sizeof(fname));
             fname[sizeof(fname) - 1] = '\0';
         } else {
-            snprintf(fname, sizeof(fname), "saves/%s", input);
+            snprintf(fname, sizeof(fname), "saves/%s", p);
         }
 
         if (!loadGame(fname, &turn)) {
@@ -56,85 +61,92 @@ int main() {
     }
 
     if (menu == 1 || menu != 2) {
-        /*printf("盤面サイズを選択してください:\n");
-        printf("1: 7x6\n2: 10x8\n3: 6x4\n> ");
+            while (1) {
+                printf("盤面の横サイズ (2～%d) を入力してください: ", MAX_YOKO);
 
-        int choice;
-        while (1) {
-            scanf("%d", &choice);
-            if (choice == 1) {
-                YOKO = 7;
-                TATE = 6;
-                break;
-            }
-            if (choice == 2) {
-                YOKO = 10;
-                TATE = 8;
-                break;
-            }
-            if (choice == 3) {
-                YOKO = 6;
-                TATE = 4;
-                break;
-            }
-            printf("無効な入力です。はじめからやり直してください。\n");
-            return 0;
-        }*/
+                if (scanf("%d%c", &YOKO, &c) != 2 || c != '\n') {
+                    printf("\n整数を入力してください。\n");
 
-        while (1) {
-            printf("盤面の横サイズ (1～%d) を入力してください: ", MAX_YOKO);
-            scanf("%d", &YOKO);
+                    // 入力バッファをクリア
+                    while (getchar() != '\n');
+                    continue;
+                }
 
-            printf("盤面の縦サイズ (1～%d) を入力してください: ", MAX_TATE);
-            scanf("%d", &TATE);
+                if (YOKO < 2 || YOKO > MAX_YOKO) {
+                    printf("範囲外です。\n");
+                    continue;
+                }
 
-            if (YOKO < 1 || YOKO > MAX_YOKO || TATE < 1 || TATE > MAX_TATE) {
-                printf("範囲外です。はじめからやり直してください。\n");
-                return 0;
+                break;  // 正しい入力
             }
-            break;
-        }
 
-        while (1) {
-            printf("1以上の揃える数を入力してください:\n>");
-            scanf("%d", &ren);
-            if (ren <= 0) {
-                printf("無効な入力です。はじめからやり直してください。\n");
-                return 0;
+
+
+            while (1) {
+                printf("盤面の縦サイズ (2～%d) を入力してください: ", MAX_TATE);
+
+                if (scanf("%d%c", &TATE, &c) != 2 || c != '\n') {
+                    printf("\n整数を入力してください。\n");
+
+                    // 入力バッファをクリア
+                    while (getchar() != '\n');
+                    continue;
+                }
+
+                if (TATE < 2 || TATE > MAX_TATE) {
+                    printf("範囲外です。\n");
+                    continue;
+                }
+
+                break;  // 正しい入力
             }
-            break;
-        }
+
+
+            while (1) {
+                printf("2以上の揃える数を入力してください:");
+
+                if (scanf("%d%c", &ren, &c) != 2 || c != '\n') {
+                    printf("\n整数を入力してください。\n");
+
+                    // 入力バッファをクリア
+                    while (getchar() != '\n');
+                    continue;
+                }
+
+                if (ren < 2 || ren > YOKO || ren > TATE) {
+                    printf("範囲外です。\n");
+                    continue;
+                }
+
+                break;  // 正しい入力
+            }
 
         int holeRate;
 
         // 落とし穴の割合設定
-        while (1) {
-            printf("落とし穴(#)の割合を入力してください (0～50%%): ");
-            scanf("%d", &holeRate);
+            while (1) {
+                printf("落とし穴(#)の割合を入力してください (0～50%%): ");
 
-            if (holeRate < 0 || holeRate > 50) {
-                printf("範囲外です。もう一度入力してください。\n");
-                return 0;
+                if (scanf("%d%c", &holeRate, &c) != 2 || c != '\n') {
+                    printf("\n整数を入力してください。\n");
+
+                    // 入力バッファをクリア
+                    while (getchar() != '\n');
+                    continue;
+                }
+
+                if (holeRate < 0 || holeRate > 50) {
+                    printf("範囲外です。\n");
+                    continue;
+                }
+
+                break;  // 正しい入力
             }
-            break;
-        }
-
-
-        /* consume leftover newline (or other chars) from scanf so the next
-           fgets() does not read an empty line immediately */
-        {
-            int _ch;
-            while ((_ch = getchar()) != '\n' && _ch != EOF);
-        }
 
         initBoard(holeRate);
-        printf("%d\n",holeRate);
-        // printf("%d\n",holeCount);
         turn = 'O';
     }
-
     int yoko;
-
     while (1) {
         displayBoard();
         printf("Player %c の手番です。列を入力: ", turn);

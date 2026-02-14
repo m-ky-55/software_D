@@ -185,18 +185,19 @@ char checkWin_5() {
 
             // 右下
             if (r + 4 < ROWS && c + 4 < COLS && p == board[r + 1][c + 1] &&
-                p == board[r + 2][c + 2] && p == board[r + 3][c + 3]&& p == board[r + 4][c + 4])
+                p == board[r + 2][c + 2] && p == board[r + 3][c + 3] &&
+                p == board[r + 4][c + 4])
                 return p;
 
             // 左下
             if (r + 4 < ROWS && c - 4 >= 0 && p == board[r + 1][c - 1] &&
-                p == board[r + 2][c - 2] && p == board[r + 3][c - 3] && p == board[r + 4][c - 4])
+                p == board[r + 2][c - 2] && p == board[r + 3][c - 3] &&
+                p == board[r + 4][c - 4])
                 return p;
         }
     }
     return 0;
 }
-
 
 //----------------------------------------------
 // 盤面がすべて埋まったか
@@ -243,7 +244,7 @@ int main() {
             printf("ロード完了\n");
         }
     }
-        char winner = 0;
+    char winner = 0;
     if (menu == 1 || menu != 2) {
         printf("盤面サイズを選択してください:\n");
         printf("1: 7x6\n2: 10x8\n3: 6x4\n> ");
@@ -272,7 +273,6 @@ int main() {
         printf("揃える数を選択してください:\n");
         printf("1: 4連\n2: 5連\n> ");
 
-        
         while (1) {
             scanf("%d", &checkWin);
             if (checkWin == 1) {
@@ -304,10 +304,10 @@ int main() {
             printf("その列には置けません。\n");
             continue;
         }
-        
+
         // ★ 毎ターン自動セーブ
         saveGame(turn);
-        
+
         if (winner) {
             displayBoard();
             printf("Player %c の勝利です！\n", winner);

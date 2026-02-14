@@ -1,17 +1,14 @@
+#include <curses.h>
+#include <errno.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <sys/stat.h>
-#include <curses.h>
-#include <locale.h>
-#include <errno.h>
+#include <time.h>
 
-
-
-
-#define MAX_TATE 20
-#define MAX_YOKO 20
+#define MAX_TATE 99
+#define MAX_YOKO 99
 
 int TATE, YOKO;
 int REN;
@@ -37,24 +34,18 @@ void createSaveGameFolder(const char* path) {
 }
 
 void makeSaveFilename(char* buf, const char* path, struct tm* tm) {
-    snprintf(buf, 256, "%s/%04d%02d%02d%02d%02d%02d.txt",
-             path,
-             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-             tm->tm_hour, tm->tm_min, tm->tm_sec);
+    snprintf(buf, 256, "%s/%04d%02d%02d%02d%02d%02d.txt", path,
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
+             tm->tm_min, tm->tm_sec);
 }
 
-int isValidSavePath(const char *fname) {
+int isValidSavePath(const char* fname) {
     int y, mo, d, h, mi, s;
     char tail;
 
-    return sscanf(
-        fname,
-        "saves/%4d%2d%2d%2d%2d%2d.txt%c",
-        &y, &mo, &d, &h, &mi, &s, &tail
-    ) == 6;
+    return sscanf(fname, "saves/%4d%2d%2d%2d%2d%2d.txt%c", &y, &mo, &d, &h, &mi,
+                  &s, &tail) == 6;
 }
-
-
 
 void saveGame(char nextTurn, const char* path, struct tm* tm) {
     char filename[256];
@@ -78,13 +69,10 @@ void saveGame(char nextTurn, const char* path, struct tm* tm) {
     fprintf(fp, "BOARD ,");
 
     for (int r = 0; r < TATE; r++)
-        for (int c = 0; c < YOKO; c++)
-            fprintf(fp, "%c ", board[r][c]);
+        for (int c = 0; c < YOKO; c++) fprintf(fp, "%c ", board[r][c]);
 
     fclose(fp);
 }
-
-
 
 //================================================
 // 盤面初期化
@@ -104,8 +92,7 @@ void initHoles(int holeCount) {
 
 void initBoard(int holeRate) {
     for (int r = 0; r < TATE; r++)
-        for (int c = 0; c < YOKO; c++)
-            board[r][c] = '.';
+        for (int c = 0; c < YOKO; c++) board[r][c] = '.';
 
     int holeCount = (TATE * YOKO * holeRate) / 100;
     initHoles(holeCount);
@@ -141,8 +128,10 @@ char checkWin(int N) {
                     int nr = r + dr[d] * k;
                     int nc = c + dc[d] * k;
                     if (nr < 0 || nr >= TATE || nc < 0 || nc >= YOKO) break;
-                    if (board[nr][nc] == p) cnt++;
-                    else break;
+                    if (board[nr][nc] == p)
+                        cnt++;
+                    else
+                        break;
                 }
                 if (cnt == N) return p;
             }
@@ -172,29 +161,26 @@ int inputNumber(const char* msg, int min, int max) {
             scanw("%d", &val);
             noecho();
             // if (val >= min && val <= max){
-            if (min <= val && val <= max){
-            break;   // 正しい入力 → 次へ
-            }else{
-                mvprintw(7, 2, "無効な選択です。%d〜%dを入力してください。",min, max);
+            if (min <= val && val <= max) {
+                break;  // 正しい入力 → 次へ
+            } else {
+                mvprintw(7, 2, "無効な選択です。%d〜%dを入力してください。",
+                         min, max);
                 clrtoeol();
                 refresh();
             }
         }
-    return val;
-    break;
+        return val;
+        break;
     }
 }
-
-
-
 
 void drawBoard(int cursor) {
     clear();
 
-    mvprintw(1, 4 + cursor * 4, "▼");
+    mvprintw(1, 5 + cursor * 4, "▼");
 
-    for (int c = 0; c < YOKO; c++)
-        mvprintw(2, 4 + c * 4, "%2d", c + 1);
+    for (int c = 0; c < YOKO; c++) mvprintw(2, 4 + c * 4, "%2d", c + 1);
 
     for (int r = 0; r < TATE; r++) {
         for (int c = 0; c < YOKO; c++) {
@@ -219,11 +205,10 @@ void drawBoard(int cursor) {
     }
 }
 
-
 //================================================
 // ロード機能
 //================================================
-int loadGame(const char *fname, char *turn) {
+int loadGame(const char* fname, char* turn) {
     char fullpath[512];
 
     if (strncmp(fname, "saves/", 6) == 0)
@@ -231,7 +216,7 @@ int loadGame(const char *fname, char *turn) {
     else
         snprintf(fullpath, sizeof(fullpath), "saves/%s", fname);
 
-    FILE *fp = fopen(fullpath, "r");
+    FILE* fp = fopen(fullpath, "r");
     if (!fp) {
         perror("ロード失敗 fopen");
         return 0;
@@ -244,7 +229,7 @@ int loadGame(const char *fname, char *turn) {
     }
     fclose(fp);
 
-    char *token;
+    char* token;
 
     token = strtok(line, ",");
     if (!token || sscanf(token, "TATE %d", &TATE) != 1) return 0;
@@ -261,11 +246,11 @@ int loadGame(const char *fname, char *turn) {
     token = strtok(NULL, ",");
     if (!token || strcmp(token, "BOARD ") != 0) return 0;
 
-    token = strtok(NULL, ",");   // ← ここが重要（盤面）
+    token = strtok(NULL, ",");  // ← ここが重要（盤面）
     if (!token) return 0;
 
     int r = 0, c = 0;
-    for (char *p = token; *p && r < TATE; p++) {
+    for (char* p = token; *p && r < TATE; p++) {
         if (*p == '.' || *p == '#' || *p == 'O' || *p == 'X') {
             board[r][c++] = *p;
             if (c == YOKO) {
@@ -277,10 +262,6 @@ int loadGame(const char *fname, char *turn) {
 
     return (r == TATE && c == 0);
 }
-
-
-
-
 
 //================================================
 // main
@@ -311,14 +292,13 @@ int main() {
         noecho();
 
         if (menu == 1 || menu == 2) {
-            break;   // 正しい入力 → 次へ
-        }else{
+            break;  // 正しい入力 → 次へ
+        } else {
             mvprintw(7, 2, "無効な選択です。1か2を入力してください。");
             clrtoeol();
             refresh();
         }
     }
-
 
     char turn = 'O';
 
@@ -333,22 +313,23 @@ int main() {
 
             if (!isValidSavePath(fname)) {
                 mvprintw(7, 2,
-                    "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
-                    mvprintw(2, 2, "新しくゲームを開始する場合は1を入力してください。");
-                    scanw("%d", &menu);
-                    noecho();
-                    if(menu == 1){
-                        break;
-                    }
+                         "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
+                mvprintw(2, 2,
+                         "新しくゲームを開始する場合は1を入力してください。");
+                scanw("%d", &menu);
+                noecho();
+                if (menu == 1) {
+                    break;
+                }
                 getch();
-                continue;   // ← 再入力
-            }else if (!loadGame(fname, &turn)) {
+                continue;  // ← 再入力
+            } else if (!loadGame(fname, &turn)) {
                 mvprintw(7, 2,
-                    "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
+                         "形式が正しくありません。saves/YYYYMMDDhhmmss.txt");
                 getch();
                 continue;
             }
-            break; // 成功
+            break;  // 成功
         }
         mvprintw(1, 2, "TATE=%d YOKO=%d REN=%d TURN=%c", TATE, YOKO, REN, turn);
     }
@@ -358,7 +339,7 @@ int main() {
     if (menu == 1) {
         YOKO = inputNumber("盤面の横サイズ", 1, MAX_YOKO);
         TATE = inputNumber("盤面の縦サイズ", 1, MAX_TATE);
-        REN  = inputNumber("連続コマ数", 1, (TATE > YOKO ? TATE : YOKO));
+        REN = inputNumber("連続コマ数", 1, (TATE > YOKO ? TATE : YOKO));
         holeRate = inputNumber("落とし穴の割合(%)", 0, 50);
         initBoard(holeRate);
         turn = 'O';
@@ -369,8 +350,8 @@ int main() {
 
     char path[256];
     snprintf(path, sizeof(path), "saves/%04d%02d%02d%02d%02d%02d",
-             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-             tm->tm_hour, tm->tm_min, tm->tm_sec);
+             tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday, tm->tm_hour,
+             tm->tm_min, tm->tm_sec);
     createSaveGameFolder(path);
 
     int cursor = 0;
@@ -381,14 +362,14 @@ int main() {
         //          "Player %c  ← → 移動 / Enter 決定", turn);
         // refresh();
         int infoY = 6 + TATE;
-        const char *pieceStr;
+        const char* pieceStr;
         int pieceColor;
 
         if (turn == 'O') {
-            pieceStr   = "●";
+            pieceStr = "●";
             pieceColor = 1;
-        } else if(turn == 'X'){
-            pieceStr   = "●";
+        } else if (turn == 'X') {
+            pieceStr = "●";
             pieceColor = 2;
         }
 
@@ -398,11 +379,11 @@ int main() {
         attroff(COLOR_PAIR(pieceColor) | A_BOLD);
         printw("  ← → 移動 / Enter 決定");
 
-
-
         int ch = getch();
-        if (ch == KEY_LEFT && cursor > 0) cursor--;
-        else if (ch == KEY_RIGHT && cursor < YOKO - 1) cursor++;
+        if (ch == KEY_LEFT && cursor > 0)
+            cursor--;
+        else if (ch == KEY_RIGHT && cursor < YOKO - 1)
+            cursor++;
         else if (ch == '\n') {
             if (!dropPiece(cursor + 1, turn)) continue;
 
@@ -415,10 +396,10 @@ int main() {
                 if (w) {
                     // mvprintw(8 + TATE, 2, "Player %c の勝利！", w);
                     if (w == 'O') {
-                        pieceStr   = "●";
+                        pieceStr = "●";
                         pieceColor = 1;
-                    } else if(w == 'X'){
-                        pieceStr   = "●";
+                    } else if (w == 'X') {
+                        pieceStr = "●";
                         pieceColor = 2;
                     }
                     mvprintw(infoY, 2, "Player ");
@@ -448,7 +429,6 @@ int main() {
     endwin();
     return 0;
 }
-
 
 // 実行：gcc connect4_ncurses.c -lncurses -o connect4
 // ./connect4
