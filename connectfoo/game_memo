@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>コネクト4 Web版</title>
+<style>
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+#gameContainer {
+    display: inline-block;
+}
+
+#columnButtons,
+#board {
+    display: grid;
+    gap: 4px;
+}
+
+#columnButtons {
+    margin-bottom: 10px;
+}
+
+/* シリアライズ化 */
+#container{
+    display:flex;
+}
+/* ロード */
+#historyArea{
+    width:300px;
+    margin-left:20px;
+    font-size:12px;
+    overflow-y:auto;
+    max-height:500px;
+}
+
+
+
+.colBtn {
+    height: 30px;
+    background: #444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.colBtn:hover {
+    background: orange;
+}
+
+.cell {
+    width: 40px;
+    height: 40px;
+    background: #ddd;
+    border-radius: 50%;
+}
+
+.O { background: red; }
+.X { background: blue; }
+.hole { background: black; }
+
+
+label{
+    font-size:18px;
+    font-weight:bold;
+    margin-right:5px;
+}
+
+input{
+    font-size:16px;
+    padding:4px;
+}
+
+</style>
+</head>
+<body>
+
+<h2>コネクト4 Web版</h2>
+
+<!-- <div id="startMenu">
+    <button onclick="selectNewGame()">新規ゲーム</button>
+    <button onclick="selectLoadGame()">ロードして再開</button>
+</div>
+
+<div id="newGameSettings" style="display:none;">
+    横: <input id="yoko">
+    縦: <input id="tate">
+    揃える数: <input id="ren">
+    穴割合(%): <input id="holeRate">
+    <button onclick="startGame()">開始</button>
+</div>
+<h3 id="turnInfo"></h3>
+<div id="gameArea" style="display:none;">
+    <div id="columnButtons"></div>
+    <div id="boardArea"></div>
+    <div id="historyArea">
+        <h3>履歴</h3>
+        <ul id="historyList"></ul>
+    </div>
+</div> -->
+
+
+
+<div id="startMenu">
+    <button onclick="selectNewGame()">新規ゲーム開始</button>
+    <button onclick="selectLoadGame()">ロードして開始</button>
+</div>
+<div id="newGameSettings" style="display:none;">
+    横: <input id="yoko">
+    縦: <input id="tate">
+    揃える数: <input id="ren">
+    穴割合(%): <input id="holeRate">
+    <button onclick="startGame()">開始</button>
+</div>
+
+<h3 id="turnInfo"></h3>
+
+<div id="gameContainer">
+    <div id="columnButtons"></div>
+    <div id="board"></div>
+</div>
+<div id="container">
+    <div id="boardArea"></div>
+    <div id="historyArea">
+        <h3>履歴</h3>
+        <ul id="historyList"></ul>
+    </div>
+</div>
+
+
+<script>
+let board = [];
+let TATE, YOKO, REN;
+let turn = "O";
+let gameOver = false;
+let startMode = null; // "new" | "load"
+
+function selectNewGame(){
+
+    startMode = "new";
+
+    document.getElementById("newGameSettings").style.display = "block";
+    document.getElementById("gameArea").style.display = "none";
+}
+// function selectNewGame(){
+//     startMode = "new";
+
+//     document.getElementById("newGameSettings").style.display = "block";
+
+//     gameOver = true;   // まだゲーム中ではない
+// }
+
+function selectLoadGame(){
+
+    startMode = "load";
+
+    document.getElementById("newGameSettings").style.display = "none";
+    document.getElementById("gameArea").style.display = "block";
+
+    renderHistory();
+}
+
+// function selectLoadGame(){
+//     startMode = "load";
+
+//     document.getElementById("newGameSettings").style.display = "none";
+
+//     gameOver = true;
+
+//     alert("右の履歴からロードしたい局面を選んでください");
+// }
+
+
+function startGame(){
+
+    console.log("startMode:", startMode);
+
+     if(startMode !== "new") return;
+    // if(startMode !== "new"){
+    //     alert("新規ゲーム開始を選択してください");
+    //     return;
+    // }
+    gameOver = false;
+    YOKO = parseInt(document.getElementById("yoko").value);
+    TATE = parseInt(document.getElementById("tate").value);
+    REN  = parseInt(document.getElementById("ren").value);
+
+    // 最大値を制限
+    let maxRen = Math.min(TATE, YOKO);
+    if(REN > maxRen){
+        REN = maxRen;
+        document.getElementById("ren").value = maxRen;
+    }
+
+    let holeRate = parseInt(document.getElementById("holeRate").value);
+
+    board = Array.from({length:TATE},()=>Array(YOKO).fill("."));
+
+    let holeCount = Math.floor(TATE*YOKO*holeRate/100);
+    let placed = 0;
+
+    while(placed < holeCount){
+        let r = Math.floor(Math.random()*TATE);
+        let c = Math.floor(Math.random()*YOKO);
+
+        if(board[r][c] === "."){
+            board[r][c] = "#";
+            placed++;
+        }
+    }
+
+    turn = "O";
+
+    const newGame = {
+        id: Date.now(),
+        name: "Game " + (historyFolders.length + 1),
+        history: []
+    };
+
+    historyFolders.push(newGame);
+    currentGameIndex = historyFolders.length - 1;
+
+    localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
+
+    saveSnapshot();   // ← 追加（重要）
+    document.getElementById("startMenu").style.display = "none";
+    document.getElementById("newGameSettings").style.display = "none";
+    document.getElementById("gameArea").style.display = "flex";
+
+    renderHistory();
+    drawBoard();
+}
+
+// function startGame(){
+//     gameOver = false;
+//     YOKO = parseInt(document.getElementById("yoko").value);
+//     TATE = parseInt(document.getElementById("tate").value);
+//     // REN = parseInt(document.getElementById("ren").value);
+//     REN = parseInt(document.getElementById("ren").value);
+
+//     // 最大値を制限
+//     let maxRen = Math.max(TATE, YOKO);
+//     if(REN > maxRen){
+//         REN = maxRen;
+//         document.getElementById("ren").value = maxRen;
+//     }
+
+// // ////////////////////////////////////////////////////////////////////////////
+//     // board = Array.from({length:TATE},()=>Array(YOKO).fill("."));
+
+//     // let holeCount = Math.floor(TATE*YOKO*holeRate/100);
+
+//     // // ===== 勝利可能ラインを確保 =====
+//     // const dr=[0,1,1,1];
+//     // const dc=[1,0,1,-1];
+
+//     // let dir = Math.floor(Math.random()*4);
+//     // let startR, startC;
+
+//     // while(true){
+//     //     startR = Math.floor(Math.random()*TATE);
+//     //     startC = Math.floor(Math.random()*YOKO);
+
+//     //     let ok = true;
+//     //     for(let k=0;k<REN;k++){
+//     //         let nr = startR + dr[dir]*k;
+//     //         let nc = startC + dc[dir]*k;
+
+//     //         if(nr<0||nr>=TATE||nc<0||nc>=YOKO){
+//     //             ok=false;
+//     //             break;
+//     //         }
+//     //     }
+//     //     if(ok) break;
+//     // }
+
+//     // // 確保ラインをマーク（穴禁止用）
+//     // let protectedCells = new Set();
+//     // for(let k=0;k<REN;k++){
+//     //     let nr = startR + dr[dir]*k;
+//     //     let nc = startC + dc[dir]*k;
+//     //     protectedCells.add(nr + "," + nc);
+//     // }
+
+//     // // ===== 穴を配置 =====
+//     // let placed = 0;
+//     // while(placed < holeCount){
+//     //     let r = Math.floor(Math.random()*TATE);
+//     //     let c = Math.floor(Math.random()*YOKO);
+
+//     //     if(board[r][c]==="." && !protectedCells.has(r+","+c)){
+//     //         board[r][c] = "#";
+//     //         placed++;
+//     //     }
+//     // }
+// // ////////////////////////////////////////////////////////////////////////////
+
+//     let holeRate = parseInt(document.getElementById("holeRate").value);
+
+//     board = Array.from({length:TATE},()=>Array(YOKO).fill("."));
+
+//     let holeCount = Math.floor(TATE*YOKO*holeRate/100);
+//     let placed = 0;
+//     while(placed < holeCount){
+//         let r = Math.floor(Math.random()*TATE);
+//         let c = Math.floor(Math.random()*YOKO);
+//         if(board[r][c] === "."){
+//             board[r][c] = "#";
+//             placed++;
+//         }
+//     }
+
+//     turn = "O";
+
+//     const newGame = {
+//         id: Date.now(),
+//         name: "Game " + (historyFolders.length + 1),
+//         history: []
+//     };
+
+//     historyFolders.push(newGame);
+//     currentGameIndex = historyFolders.length - 1;
+
+//     localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
+
+//     renderHistory();
+
+
+//     drawBoard();
+// }
+
+function drawBoard(){
+    let btnDiv = document.getElementById("columnButtons");
+    let boardDiv = document.getElementById("board");
+
+    btnDiv.style.gridTemplateColumns = `repeat(${YOKO}, 40px)`;
+    boardDiv.style.gridTemplateColumns = `repeat(${YOKO}, 40px)`;
+
+    btnDiv.innerHTML = "";
+    boardDiv.innerHTML = "";
+
+    // ▼ ボタン生成
+    for(let c=0;c<YOKO;c++){
+        let btn = document.createElement("button");
+        btn.classList.add("colBtn");
+        btn.textContent = "▼";
+        btn.onclick = ()=>dropPiece(c);
+
+        if(gameOver){
+            btn.disabled = true;
+            btn.style.background = "#999";
+            btn.style.cursor = "not-allowed";
+        }
+
+        btnDiv.appendChild(btn);
+    }
+
+    // for(let c=0;c<YOKO;c++){
+    //     let btn = document.createElement("button");
+    //     btn.classList.add("colBtn");
+    //     btn.textContent = "▼";
+    //     btn.onclick = ()=>dropPiece(c);
+    //     btnDiv.appendChild(btn);
+    // }
+
+    // 盤面生成
+    for(let r=0;r<TATE;r++){
+        for(let c=0;c<YOKO;c++){
+            let cell = document.createElement("div");
+            cell.classList.add("cell");
+
+            if(board[r][c]==="O") cell.classList.add("O");
+            if(board[r][c]==="X") cell.classList.add("X");
+            if(board[r][c]==="#") cell.classList.add("hole");
+
+            boardDiv.appendChild(cell);
+        }
+    }
+    document.getElementById("turnInfo").textContent =
+        `Player ${turn} の手番`;
+}
+
+async function dropPiece(col){
+
+    if(gameOver) return;
+
+    let targetRow = -1;
+
+    // 最終着地点を探す
+    for(let r=TATE-1;r>=0;r--){
+        if(board[r][col] === "#") continue;
+        if(board[r][col] === "."){
+            targetRow = r;
+            break;
+        }
+    }
+
+    if(targetRow === -1) return;
+
+    gameOver = true; // アニメ中ロック
+
+    // 上から順に仮表示
+    for(let r=0; r<=targetRow; r++){
+
+        if(board[r][col] === "#") continue;
+
+        drawBoard(); // 一旦通常描画
+
+        // 仮描画用
+        let boardDiv = document.getElementById("board");
+        let index = r * YOKO + col;
+        let cell = boardDiv.children[index];
+        cell.classList.add(turn);
+
+        await new Promise(res => setTimeout(res, 50));
+    }
+
+    // 正式に配置
+    board[targetRow][col] = turn;
+
+    gameOver = false;
+
+    drawBoard();
+
+    // 勝敗判定
+    if(checkWin()){
+        gameOver = true;
+        alert(`Player ${turn} の勝利！`);
+        return;
+    }
+
+    if(isFull()){
+        gameOver = true;
+        alert("引き分け！");
+        return;
+    }
+
+    turn = (turn==="O")?"X":"O";
+    drawBoard();
+    saveSnapshot();
+
+}
+
+// function dropPiece(col){
+//     let placed = false;
+
+//     for(let r=TATE-1;r>=0;r--){
+//         if(board[r][col]==="#") continue;
+//         if(board[r][col]==="."){
+//             board[r][col] = turn;
+//             placed = true;
+//             break;
+//         }
+//     }
+
+//     if(!placed) return;
+
+//     if(checkWin()){
+//         drawBoard();
+//         alert(`Player ${turn} の勝利！`);
+//         gameOver = true;
+//         drawBoard();
+//         return;
+//     }
+
+//     // if(checkWin()){
+//     //     drawBoard();
+//     //     alert(`Player ${turn} の勝利！`);
+//     //     return;
+//     // }
+
+//     if(isFull()){
+//     drawBoard();
+//     alert("引き分け！");
+//     gameOver = true;
+//     drawBoard();
+//     return;
+// }
+
+//     // if(isFull()){
+//     //     drawBoard();
+//     //     alert("引き分け！");
+//     //     return;
+//     // }
+
+//     if(gameOver) return;
+
+
+//     turn = (turn==="O")?"X":"O";
+//     drawBoard();
+// }
+
+function checkWin(){
+    const dr=[0,1,1,1];
+    const dc=[1,0,1,-1];
+
+    for(let r=0;r<TATE;r++){
+        for(let c=0;c<YOKO;c++){
+            let p=board[r][c];
+            if(p==="."||p==="#") continue;
+
+            for(let d=0;d<4;d++){
+                let count=1;
+                for(let k=1;k<REN;k++){
+                    let nr=r+dr[d]*k;
+                    let nc=c+dc[d]*k;
+                    if(nr<0||nr>=TATE||nc<0||nc>=YOKO) break;
+                    if(board[nr][nc]===p) count++;
+                    else break;
+                }
+                if(count===REN) return true;
+            }
+        }
+    }
+    return false;
+}
+
+function isFull(){
+    for(let r=0;r<TATE;r++)
+        for(let c=0;c<YOKO;c++)
+            if(board[r][c]===".") return false;
+    return true;
+}
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// シリアライズ化関数
+function serializeBoard(){
+
+    let flatBoard = board.flat().join(" ");
+
+    return `TATE ${TATE}, YOKO ${YOKO}, TURN ${turn}, REN ${REN}, BOARD ${flatBoard}`;
+}
+
+// // 履歴保存
+// historyFolders = [
+//   {
+//     id: 1,
+//     name: "Game 1",
+//     history: [ snapshot1, snapshot2, snapshot3 ]
+//   },
+//   {
+//     id: 2,
+//     name: "Game 2",
+//     history: [ snapshot1, snapshot2, snapshot3 ]
+//   }
+// ]
+
+let historyList = [];
+let historyFolders = [];
+let currentGameIndex = -1;
+
+function saveSnapshot(){
+
+    if(currentGameIndex === -1) return;
+
+    const snapshot = {
+        TATE,
+        YOKO,
+        REN,
+        board: JSON.parse(JSON.stringify(board)),
+        turn
+    };
+
+    historyFolders[currentGameIndex].history.push(snapshot);
+
+    localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
+
+    renderHistory();
+}
+
+// function saveSnapshot(){
+
+//     const snapshot = {
+//         TATE,
+//         YOKO,
+//         REN,
+//         board: JSON.parse(JSON.stringify(board)),
+//         turn
+//     };
+
+//     historyList.push(snapshot);
+
+//     localStorage.setItem("historyList", JSON.stringify(historyList));
+
+//     renderHistory();
+// }
+
+// 履歴表示関数
+function renderHistory(){
+
+    const ul = document.getElementById("historyList");
+    ul.innerHTML = "";
+
+    historyFolders.forEach((folder,folderIndex)=>{
+
+        let folderLi = document.createElement("li");
+        folderLi.textContent = "📁 " + folder.name;
+        folderLi.style.fontWeight = "bold";
+        ul.appendChild(folderLi);
+
+        let innerUl = document.createElement("ul");
+
+        folder.history.forEach((snap,snapIndex)=>{
+
+            let li = document.createElement("li");
+
+            let flatBoard = snap.board.flat().join(" ");
+
+            li.textContent =
+                `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} ${snap.turn}`;
+
+            li.style.cursor = "pointer";
+
+            li.onclick = ()=>{
+                loadFromFolder(folderIndex, snapIndex);
+            };
+
+            innerUl.appendChild(li);
+        });
+
+        ul.appendChild(innerUl);
+    });
+}
+
+// function renderHistory(){
+
+//     const ul = document.getElementById("historyList");
+//     ul.innerHTML = "";
+
+//     historyList.forEach((item,index)=>{
+
+//         let li = document.createElement("li");
+
+//         let flatBoard = item.board.flat().join(" ");
+
+//         li.textContent =
+//             `${index+1}: T${item.TATE} Y${item.YOKO} ${item.turn} ${flatBoard}`;
+
+//         li.style.cursor = "pointer";
+
+//         li.onclick = ()=> loadFromHistory(index);
+
+//         ul.appendChild(li);
+//     });
+// }
+
+// フォルダからロード
+function loadFromFolder(folderIndex, snapIndex){
+
+    const data = historyFolders[folderIndex].history[snapIndex];
+
+    TATE = data.TATE;
+    YOKO = data.YOKO;
+    REN  = data.REN;
+    board = JSON.parse(JSON.stringify(data.board));
+    turn = data.turn;
+
+    currentGameIndex = folderIndex;
+
+    gameOver = false;     // ← ここでゲーム再開
+    startMode = "load";
+    document.getElementById("startMenu").style.display = "none";
+    document.getElementById("gameArea").style.display = "flex";
+
+    drawBoard();
+}
+
+// function loadFromFolder(folderIndex, snapIndex){
+
+//     const data = historyFolders[folderIndex].history[snapIndex];
+
+//     TATE = data.TATE;
+//     YOKO = data.YOKO;
+//     REN  = data.REN;
+//     board = JSON.parse(JSON.stringify(data.board));
+//     turn = data.turn;
+
+//     currentGameIndex = folderIndex;
+
+//     gameOver = false;
+
+//     drawBoard();
+// }
+
+
+// 履歴からロード
+// function loadFromHistory(index){
+
+//     const data = historyList[index];
+
+//     TATE = data.TATE;
+//     YOKO = data.YOKO;
+//     REN  = data.REN;
+//     board = JSON.parse(JSON.stringify(data.board));
+//     turn = data.turn;
+
+//     gameOver = false;
+
+//     drawBoard();
+// }
+
+// ページ読み込み時に復元
+window.onload = function(){
+
+    document.getElementById("gameArea").style.display = "none";
+    document.getElementById("newGameSettings").style.display = "none";
+
+    const saved = localStorage.getItem("historyFolders");
+    if(saved){
+        historyFolders = JSON.parse(saved);
+    }
+};
+
+
+// window.onload = function(){
+
+//     const saved = localStorage.getItem("historyFolders");
+
+//     if(saved){
+//         historyFolders = JSON.parse(saved);
+//         renderHistory();
+//     }
+
+//     drawBoard();
+// };
+
+// window.onload = function(){
+
+//     const saved = localStorage.getItem("historyFolders");
+//     if(saved){
+//         historyFolders = JSON.parse(saved);
+//         renderHistory();
+//     }
+
+//     gameOver = true;  // まだ開始していない
+//     drawBoard();
+// };
+
+
+// window.onload = function(){
+
+//     const saved = localStorage.getItem("historyList");
+
+//     if(saved){
+//         historyList = JSON.parse(saved);
+//         renderHistory();
+//     }
+
+//     drawBoard();
+// };
+
+
+// ////////////////////////////////////////////////////////////////////////////
+    // function hasPossibleLine(){
+    //     const dr=[0,1,1,1];
+    //     const dc=[1,0,1,-1];
+
+    //     for(let r=0;r<TATE;r++){
+    //         for(let c=0;c<YOKO;c++){
+
+    //             for(let d=0;d<4;d++){
+    //                 let count=0;
+
+    //                 for(let k=0;k<REN;k++){
+    //                     let nr=r+dr[d]*k;
+    //                     let nc=c+dc[d]*k;
+
+    //                     if(nr<0||nr>=TATE||nc<0||nc>=YOKO){
+    //                         count=0;
+    //                         break;
+    //                     }
+
+    //                     if(board[nr][nc] !== "#")
+    //                         count++;
+    //                     else{
+    //                         count=0;
+    //                         break;
+    //                     }
+    //                 }
+
+    //                 if(count===REN) return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
+// ////////////////////////////////////////////////////////////////////////////
+
+</script>
+
+</body>
+</html>
