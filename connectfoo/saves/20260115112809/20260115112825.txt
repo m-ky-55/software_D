@@ -1,1 +1,0 @@
-TATE 3,YOKO 3,TURN O,REN 3,BOARD ,. . . O X . O X . 
