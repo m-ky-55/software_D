@@ -405,18 +405,16 @@ function startGame(){
     REN = parseInt(document.getElementById("ren").value);
     let maxRen = Math.max(TATE, YOKO);             // 横・縦のどちらか小さい方を上限に
     document.getElementById("ren").max = maxRen;   // inputの最大値も更新
-
+    let minRen = Math.min(TATE, YOKO);             // 横・縦のどちらか小さい方を上限に
+    document.getElementById("ren").min = minRen;   // inputの最大値も更新
     if(REN > maxRen){
         REN = maxRen;
         document.getElementById("ren").value = maxRen;
-    }
-
-    let minRen = Math.min(TATE, YOKO);             // 横・縦のどちらか小さい方を上限に
-    document.getElementById("ren").min = minRen;   // inputの最大値も更新
-
-    if(REN < minRen){
-        REN = minRen;
+    }else if(REN < 2){
+        REN = 2;
         document.getElementById("ren").value = minRen;
+    }else{
+        REN = parseInt(document.getElementById("ren").value);
     }
 
     // 穴割合
@@ -567,7 +565,13 @@ async function dropPiece(col){
         msg.style.fontSize = "40px";
         msg.style.fontWeight = "bold";
         msg.style.marginTop = "30px";
-        msg.innerHTML = `Player <span class="turnPiece ${turn}"></span> の勝利！<br>"終了"を押してゲーム終了`;
+        // msg.innerHTML = `Player <span class="turnPiece ${turn}"></span> の勝利！<br>"終了"を押してゲーム終了`;
+        msg.innerHTML = `
+            Player <span class="turnPiece ${turn}"></span> の勝利！<br>
+            <span style="font-size:20px;">
+                "終了"を押してゲーム終了
+            </span>
+        `;
 
         turnInfo.appendChild(msg);
 
@@ -586,7 +590,13 @@ async function dropPiece(col){
         msg.style.fontSize = "40px";
         msg.style.fontWeight = "bold";
         msg.style.marginTop = "30px";
-        msg.innerHTML = `引き分け！<br>"終了"を押してゲーム終了`;
+        // msg.innerHTML = `引き分け！<br>"終了"を押してゲーム終了`;
+        msg.innerHTML = `
+            引き分け！<br>
+            <span style="font-size:20px;">
+                "終了"を押してゲーム終了
+            </span>
+        `;
 
         turnInfo.appendChild(msg);
         // alert("引き分け！");
