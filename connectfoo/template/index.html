@@ -915,16 +915,20 @@ function renderFolderHistory(folderIndex){
 
     folder.history.forEach((snap, snapIndex)=>{
         const li = document.createElement("li");
-        li.textContent = `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} ${snap.turn}`;
+        
+        li.innerHTML =
+            `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} 
+            ${snap.turn === "O" ? "🔴" : "🔵"}`;
+
         li.style.cursor = "pointer";
 
         li.onclick = ()=>{
 
             // 🔒 ゲーム中はロード禁止
-            if(!gameOver){
-                // alert("ゲーム中はロードできません");
-                return;
-            }
+            // if(!gameOver){
+            //     // alert("ゲーム中はロードできません");
+            //     return;
+            // }
 
             loadFromFolder(folderIndex, snapIndex);
         };
