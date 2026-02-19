@@ -90,8 +90,17 @@ body {
     border-radius: 50%;
 }
 
-.O { background: red; }
-.X { background: blue; }
+.O { 
+  background: red; 
+  /* border: 2px solid darkred;
+  box-shadow: inset -3px -3px 5px rgba(0,0,0,0.3); */
+}
+.X { 
+  background: blue; 
+  /* border: 2px solid darkblue;
+  box-shadow: inset -3px -3px 5px rgba(0,0,0,0.3); */
+}
+
 .hole { background: black; }
 
 
@@ -256,16 +265,16 @@ input{
     <button class="mainButton" onclick="selectLoadGame()">ロードして開始</button>
 </div>
 <div id="newGameSettings" style="display:none;">
-    横:
+    横(2〜99):
 <input type="number" id="yoko" min="2" max="35" value="7">
 
-縦:
+縦(2〜99):
 <input type="number" id="tate" min="2" max="99" value="6">
 
-揃える数:
+揃える数(2〜99):
 <input type="number" id="ren" min="2" max="99" value="4">
 
-穴割合(%):
+ブロッカー割合(%)(0〜50%):
 <input type="number" id="holeRate" min="0" max="50" value="20">
     <button class="mainButton" onclick="startGame()">開始</button>
 </div>
@@ -280,13 +289,14 @@ input{
 
     <div id="historyArea">
         <h3>履歴</h3>
+    <div id="historyTabs"></div>
     <div id="historyScroll">
         <ul id="historyList"></ul>
         <button id="deleteHistoryBtn" onclick="deleteAllHistory()">
                 履歴を削除
             </button>
     </div>
-        <!-- 🔽 ボタンエリア（固定） -->
+
         <div id="historyButtons button">
             
             <button id="exitBtn" onclick="exitGame()" style="display:none;">
@@ -313,20 +323,66 @@ function selectNewGame(){
     document.getElementById("startMenu").style.display = "none";
     document.getElementById("newGameSettings").style.display = "block";
 }
-
+let showDeleteHistory = true; // 履歴削除ボタンを表示するかのフラグ
 
 function selectLoadGame(){
-
     startMode = "load";
 
+    // メニュー非表示、ゲームコンテナ表示
     document.getElementById("startMenu").style.display = "none";
     document.getElementById("container").style.display = "flex";
     document.getElementById("exitBtn").style.display = "inline-block";
-    document.getElementById("turnInfo").textContent =
-        "履歴から選んでください";
+    document.getElementById("turnInfo").textContent = "履歴から選んでください";
 
+    // 🔹 履歴削除ボタンは非表示
+    showDeleteHistory = false;
+
+    // 盤面はまだ表示しないので gameContainer は非表示
+    document.getElementById("gameContainer").style.display = "none";
+
+    // 履歴だけ表示
     renderHistory();
 }
+// function selectLoadGame(){
+//     startMode = "load";
+
+//     // メニュー非表示、ゲームコンテナ表示
+//     document.getElementById("startMenu").style.display = "none";
+//     document.getElementById("container").style.display = "flex";
+//     document.getElementById("exitBtn").style.display = "inline-block";
+//     document.getElementById("turnInfo").textContent = "履歴から選んでください";
+
+//     // 🔹 ロード時は履歴削除ボタンを非表示
+//     document.getElementById("deleteHistoryBtn").style.display = "none";
+
+//     renderHistory();
+// }
+
+// 新規ゲーム開始後やゲーム中は履歴削除ボタンを表示
+function updateDeleteHistoryBtn(){
+    if(startMode === "new" && !gameOver){
+        document.getElementById("deleteHistoryBtn").style.display = "block";
+    } else if(startMode === "load" && gameOver){
+        document.getElementById("deleteHistoryBtn").style.display = "block";
+    } else {
+        document.getElementById("deleteHistoryBtn").style.display = "none";
+    }
+}
+
+// function selectLoadGame(){
+//     startMode = "load";
+
+//     document.getElementById("startMenu").style.display = "none";
+//     document.getElementById("container").style.display = "flex";
+//     document.getElementById("exitBtn").style.display = "inline-block";
+//     document.getElementById("turnInfo").textContent =
+//         "履歴から選んでください";
+
+//     renderHistory();
+
+//     // 🔹 履歴削除ボタンを非表示
+//     document.getElementById("deleteHistoryBtn").style.display = "none";
+// }
 
 
 function startGame(){
@@ -338,18 +394,40 @@ function startGame(){
 
     gameOver = false;
 
+    // 横・縦
     YOKO = parseInt(document.getElementById("yoko").value);
     TATE = parseInt(document.getElementById("tate").value);
-    REN  = parseInt(document.getElementById("ren").value);
-    
 
+    if(YOKO < 2) YOKO = 2; if(YOKO > 99) YOKO = 99;
+    if(TATE < 2) TATE = 2; if(TATE > 99) TATE = 99;
+
+    // 揃える駒数 (REN) の補正
+    REN = parseInt(document.getElementById("ren").value);
+    let maxRen = Math.max(TATE, YOKO);             // 横・縦のどちらか小さい方を上限に
+    document.getElementById("ren").max = maxRen;   // inputの最大値も更新
+    let minRen = Math.min(TATE, YOKO);             // 横・縦のどちらか小さい方を上限に
+    document.getElementById("ren").min = minRen;   // inputの最大値も更新
+    if(REN > maxRen){
+        REN = maxRen;
+        document.getElementById("ren").value = maxRen;
+    }else if(REN < 2){
+        REN = 2;
+        document.getElementById("ren").value = minRen;
+    }else{
+        REN = parseInt(document.getElementById("ren").value);
+    }
+
+    // 穴割合
     let holeRate = parseInt(document.getElementById("holeRate").value);
+    if(holeRate < 0) holeRate = 0;
+    if(holeRate > 50) holeRate = 50;
+    document.getElementById("holeRate").value = holeRate;
 
+    // ボード初期化
     board = Array.from({length:TATE},()=>Array(YOKO).fill("."));
 
     let holeCount = Math.floor(TATE*YOKO*holeRate/100);
     let placed = 0;
-
     while(placed < holeCount){
         let r = Math.floor(Math.random()*TATE);
         let c = Math.floor(Math.random()*YOKO);
@@ -364,6 +442,7 @@ function startGame(){
     const newGame = {
         id: Date.now(),
         name: "Game " + (historyFolders.length + 1),
+        startTime: new Date().toLocaleString(),
         history: []
     };
 
@@ -372,17 +451,16 @@ function startGame(){
 
     saveSnapshot();
 
-    // 🔥 ここでゲーム画面表示
+    // ゲーム画面表示
     document.getElementById("newGameSettings").style.display = "none";
     document.getElementById("gameContainer").style.display = "block";
     document.getElementById("container").style.display = "flex";
     document.getElementById("exitBtn").style.display = "inline-block";
-    
-
-
+    document.getElementById("deleteHistoryBtn").style.display = "inline-block";
     drawBoard();
     renderHistory();
 }
+
 
 
 function drawBoard(){
@@ -464,7 +542,7 @@ async function dropPiece(col){
         let cell = boardDiv.children[index];
         cell.classList.add(turn);
 
-        await new Promise(res => setTimeout(res, 50));
+        await new Promise(res => setTimeout(res, 30));
     }
 
     // 正式に配置
@@ -477,13 +555,51 @@ async function dropPiece(col){
     // 勝敗判定
     if(checkWin()){
         gameOver = true;
-        alert(`Player ${turn} の勝利！`);
+
+        // 手番表示を消す
+        const turnInfo = document.getElementById("turnInfo");
+        turnInfo.innerHTML = ""; // 手番表示をクリア
+
+        // 勝利メッセージを画面に表示
+        const msg = document.createElement("div");
+        msg.style.fontSize = "40px";
+        msg.style.fontWeight = "bold";
+        msg.style.marginTop = "30px";
+        // msg.innerHTML = `Player <span class="turnPiece ${turn}"></span> の勝利！<br>"終了"を押してゲーム終了`;
+        msg.innerHTML = `
+            Player <span class="turnPiece ${turn}"></span> の勝利！<br>
+            <span style="font-size:20px;">
+                "終了"を押してゲーム終了
+            </span>
+        `;
+
+        turnInfo.appendChild(msg);
+
         return;
     }
 
+
     if(isFull()){
         gameOver = true;
-        alert("引き分け！");
+        // 手番表示を消す
+        const turnInfo = document.getElementById("turnInfo");
+        turnInfo.innerHTML = ""; // 手番表示をクリア
+
+        // 勝利メッセージを画面に表示
+        const msg = document.createElement("div");
+        msg.style.fontSize = "40px";
+        msg.style.fontWeight = "bold";
+        msg.style.marginTop = "30px";
+        // msg.innerHTML = `引き分け！<br>"終了"を押してゲーム終了`;
+        msg.innerHTML = `
+            引き分け！<br>
+            <span style="font-size:20px;">
+                "終了"を押してゲーム終了
+            </span>
+        `;
+
+        turnInfo.appendChild(msg);
+        // alert("引き分け！");
         return;
     }
 
@@ -565,88 +681,106 @@ function saveSnapshot(){
 
 // 履歴表示関数
 function renderHistory(){
-
+    const tabsDiv = document.getElementById("historyTabs");
     const ul = document.getElementById("historyList");
+    tabsDiv.innerHTML = "";
     ul.innerHTML = "";
 
-    historyFolders.forEach((folder,folderIndex)=>{
+    if(historyFolders.length === 0) return;
 
-        let folderLi = document.createElement("li");
-        folderLi.textContent = "📁 " + folder.name;
-        folderLi.style.fontWeight = "bold";
-        ul.appendChild(folderLi);
+    // タブ作成（最新順）
+    historyFolders.slice().reverse().forEach((folder, indexRev)=>{
+        const index = historyFolders.length - 1 - indexRev; // 元の配列インデックス
+        const btn = document.createElement("button");
+        btn.textContent = folder.name;
 
-        let innerUl = document.createElement("ul");
+        // ✅ 現在プレイ中のゲームなら色を変える
+        if(index === currentGameIndex){
+            btn.style.backgroundColor = "#f39c12"; // オレンジ色など
+            btn.style.color = "white";
+        } else {
+            btn.style.backgroundColor = "#eee";
+            btn.style.color = "#000";
+        }
 
-        folder.history.forEach((snap,snapIndex)=>{
-
-            let li = document.createElement("li");
-
-            let flatBoard = snap.board.flat().join(" ");
-
-            li.textContent =
-                `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} ${snap.turn}`;
-
-            li.style.cursor = "pointer";
-
-            li.onclick = ()=>{
-
-            // 🔒 ゲーム中はロード禁止
-            if(currentGameIndex !== -1){
-                // alert("ゲーム中はロードできません。終了してください。");
-                return;
-            }
-
-    loadFromFolder(folderIndex, snapIndex);
-};
-
-
-            innerUl.appendChild(li);
-        });
-
-        ul.appendChild(innerUl);
+        btn.onclick = ()=> renderFolderHistory(index);
+        tabsDiv.appendChild(btn);
     });
+
+    // 初期表示は最新
+    renderFolderHistory(historyFolders.length - 1);
 }
 
 
-// フォルダからロード
+// 履歴からゲームを選択したら盤面表示
 function loadFromFolder(folderIndex, snapIndex){
-
     const data = historyFolders[folderIndex].history[snapIndex];
 
-    // ① 盤面データを取得
     TATE = data.TATE;
     YOKO = data.YOKO;
-    REN  = data.REN;
+    REN = data.REN;
     board = JSON.parse(JSON.stringify(data.board));
     turn = data.turn;
-
     gameOver = false;
 
-    // ② 新しいフォルダを作る（分岐）
+    // 履歴削除ボタンを表示
+    showDeleteHistory = true;
+    document.getElementById("deleteHistoryBtn").style.display = "block";
+
+    // 盤面を表示
+    document.getElementById("gameContainer").style.display = "block";
+
+    // 現在のゲームフォルダを新規作成
     const newGame = {
         id: Date.now(),
         name: "Game " + (historyFolders.length + 1),
         history: []
     };
-
     historyFolders.push(newGame);
     currentGameIndex = historyFolders.length - 1;
 
-    // ③ 読み込んだ盤面を初期スナップショットとして保存
     saveSnapshot();
-
-    localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
-
-    // 表示
-    document.getElementById("gameContainer").style.display = "block";
-    document.getElementById("historyArea").style.display = "block";
-    document.getElementById("exitBtn").style.display = "inline-block";
-    
-
     drawBoard();
     renderHistory();
 }
+// // フォルダからロード
+// function loadFromFolder(folderIndex, snapIndex){
+
+//     const data = historyFolders[folderIndex].history[snapIndex];
+
+//     // ① 盤面データを取得
+//     TATE = data.TATE;
+//     YOKO = data.YOKO;
+//     REN  = data.REN;
+//     board = JSON.parse(JSON.stringify(data.board));
+//     turn = data.turn;
+
+//     gameOver = false;
+
+//     // ② 新しいフォルダを作る（分岐）
+//     const newGame = {
+//         id: Date.now(),
+//         name: "Game " + (historyFolders.length + 1),
+//         history: []
+//     };
+
+//     historyFolders.push(newGame);
+//     currentGameIndex = historyFolders.length - 1;
+
+//     // ③ 読み込んだ盤面を初期スナップショットとして保存
+//     saveSnapshot();
+
+//     localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
+
+//     // 表示
+//     document.getElementById("gameContainer").style.display = "block";
+//     document.getElementById("historyArea").style.display = "block";
+//     document.getElementById("exitBtn").style.display = "inline-block";
+    
+
+//     drawBoard();
+//     renderHistory();
+// }
 
 // // ページ読み込み時に復元
 
@@ -668,18 +802,156 @@ function exitGame(){
 }
 
 
-
-function deleteAllHistory(){
-
-    if(!confirm("本当に履歴をすべて削除しますか？")){
+function deleteAllHistory() {
+    if(!confirm("現在のゲーム以外の履歴を削除しますか？")){
         return;
     }
 
-    historyFolders = [];
-    localStorage.removeItem("historyFolders");
+    if(currentGameIndex === -1) return; // 現在のゲームがない場合は何もしない
 
+    // 現在のゲームのみ残す
+    const currentGame = historyFolders[currentGameIndex];
+
+    // フォルダ名を Game 1 に変更
+    currentGame.name = "Game 1";
+
+    // 履歴を更新
+    historyFolders = [currentGame];
+    currentGameIndex = 0; // 新しい配列なのでインデックスを0に
+
+    localStorage.setItem("historyFolders", JSON.stringify(historyFolders));
+
+    // 履歴表示更新
     renderHistory();
 }
+
+
+function renderHistory(){
+    const tabsDiv = document.getElementById("historyTabs");
+    const ul = document.getElementById("historyList");
+    tabsDiv.innerHTML = "";
+    ul.innerHTML = "";
+
+    if(historyFolders.length === 0) return;
+
+    // タブ作成（フォルダごと）
+    // historyFolders.forEach((folder, index)=>{
+    //     const btn = document.createElement("button");
+    //     btn.textContent = folder.name;
+
+            historyFolders.slice().reverse().forEach((folder, indexRev)=>{
+        const index = historyFolders.length - 1 - indexRev; // 元の配列インデックス
+        const btn = document.createElement("button");
+        btn.textContent = folder.name;
+
+        // 🔹 現在のゲームなら色を変える
+
+        if(index === currentGameIndex){
+            btn.style.backgroundColor = "#f39c12"; // オレンジ色
+            btn.style.color = "white";
+        } else {
+            btn.style.backgroundColor = "#eee"; // 普通の色
+            btn.style.color = "#000";
+        }
+
+        btn.onclick = ()=> renderFolderHistory(index);
+        tabsDiv.appendChild(btn);
+    });
+
+    //     if(index === currentGameIndex){
+    //         btn.style.backgroundColor = "#ffd700";  // 金色
+    //         btn.style.color = "#000";
+    //     } else {
+    //         btn.style.backgroundColor = "";
+    //         btn.style.color = "";
+    //     }
+
+    //     btn.onclick = ()=> renderFolderHistory(index);
+    //     tabsDiv.appendChild(btn);
+    // });
+
+    // 初期表示は最新フォルダ
+    renderFolderHistory(historyFolders.length - 1);
+}
+
+// function renderHistory(){
+//     const tabsDiv = document.getElementById("historyTabs");
+//     const ul = document.getElementById("historyList");
+//     tabsDiv.innerHTML = "";
+//     ul.innerHTML = "";
+
+//     if(historyFolders.length === 0) return;
+
+//     // タブ作成（最新順）
+//     historyFolders.slice().reverse().forEach((folder, indexRev)=>{
+//         const index = historyFolders.length - 1 - indexRev; // 元の配列インデックス
+//         const btn = document.createElement("button");
+//         btn.textContent = folder.name;
+
+//         // ✅ 現在のゲームフォルダなら色を変える
+//         if(index === currentGameIndex){
+//             btn.style.backgroundColor = "#f39c12"; // オレンジ色
+//             btn.style.color = "white";
+//         } else {
+//             btn.style.backgroundColor = "#eee"; // 普通の色
+//             btn.style.color = "#000";
+//         }
+
+//         btn.onclick = ()=> renderFolderHistory(index);
+//         tabsDiv.appendChild(btn);
+//     });
+
+//     // 初期表示は最新
+//     renderFolderHistory(historyFolders.length - 1);
+// }
+
+
+// 履歴のフォルダを表示する関数
+function renderFolderHistory(folderIndex){
+    const ul = document.getElementById("historyList");
+    ul.innerHTML = "";
+
+    const folder = historyFolders[folderIndex];
+
+    folder.history.forEach((snap, snapIndex)=>{
+        const li = document.createElement("li");
+        li.textContent = `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} ${snap.turn}`;
+        li.style.cursor = "pointer";
+
+        li.onclick = ()=>{
+
+            // 🔒 ゲーム中はロード禁止
+            if(!gameOver){
+                // alert("ゲーム中はロードできません");
+                return;
+            }
+
+            loadFromFolder(folderIndex, snapIndex);
+        };
+
+        ul.appendChild(li);
+    });
+}
+
+// function renderFolderHistory(folderIndex){
+//     const ul = document.getElementById("historyList");
+//     ul.innerHTML = "";
+
+//     const folder = historyFolders[folderIndex];
+
+//     folder.history.forEach((snap, snapIndex)=>{
+//         const li = document.createElement("li");
+//         li.textContent = `${snapIndex+1}: T${snap.TATE} Y${snap.YOKO} ${snap.turn}`;
+//         li.style.cursor = "pointer";
+
+//         li.onclick = ()=>{
+//             // 🔹 履歴をロードして盤面を表示
+//             loadFromFolder(folderIndex, snapIndex);
+//         };
+
+//         ul.appendChild(li);
+//     });
+// }
 
 
 </script>
